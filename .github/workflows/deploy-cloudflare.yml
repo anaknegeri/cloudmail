@@ -235,8 +235,8 @@ jobs:
           echo "🛠️ Starting database initialization..."
           sleep 15
           
-          # Use the first domain as the primary URL for initialization
-          WORKER_URL="https://anaknegeri.co.id"
+          # Use mail subdomain for database initialization
+          WORKER_URL="https://mail.anaknegeri.co.id"
           
           if [ -z "$WORKER_URL" ]; then
             echo "❌ Preview URL not available. Please set CUSTOM_DOMAIN."

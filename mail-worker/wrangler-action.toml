@@ -7,7 +7,7 @@ enabled = true
 
 # Single domain routing
 [[routes]]
-pattern = "anaknegeri.co.id"
+pattern = "mail.anaknegeri.co.id"
 custom_domain = true
 
 [[d1_databases]]
