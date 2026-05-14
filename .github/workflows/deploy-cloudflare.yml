@@ -236,7 +236,7 @@ jobs:
           sleep 15
           
           # Use the first domain as the primary URL for initialization
-          WORKER_URL="https://anaktotoger.co.id"
+          WORKER_URL="https://anaknegeri.co.id"
           
           if [ -z "$WORKER_URL" ]; then
             echo "❌ Preview URL not available. Please set CUSTOM_DOMAIN."

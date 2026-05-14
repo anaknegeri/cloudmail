@@ -7,7 +7,7 @@ enabled = true
 
 # Multi-domain routing: all three domains served by this worker
 [[routes]]
-pattern = "anaktotoger.co.id"
+pattern = "anaknegeri.co.id"
 custom_domain = true
 
 [[routes]]
