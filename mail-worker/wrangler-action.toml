@@ -5,17 +5,9 @@ compatibility_date = "2025-06-04"
 [observability]
 enabled = true
 
-# Multi-domain routing: all three domains served by this worker
+# Single domain routing
 [[routes]]
 pattern = "anaknegeri.co.id"
-custom_domain = true
-
-[[routes]]
-pattern = "gudtoko.com"
-custom_domain = true
-
-[[routes]]
-pattern = "sakreta.com"
 custom_domain = true
 
 [[d1_databases]]
