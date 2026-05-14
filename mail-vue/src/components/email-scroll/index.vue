@@ -1,33 +1,45 @@
 <template>
-  <div class="email-container">
-    <div class="header-actions">
-      <el-checkbox
-          v-model="checkAll"
-          :indeterminate="isIndeterminate"
-          :disabled="!emailList.length || loading"
-          @change="handleCheckAllChange"
-      >
-      </el-checkbox>
-      <div class="header-left" :style="'padding-left:' + actionLeft">
-
-        <slot name="first"></slot>
-        <Icon class="icon reload" icon="ion:reload" width="18" height="18" @click="refresh"/>
-        <Icon v-perm="'email:delete'" class="icon delete" icon="uiw:delete" width="16" height="16"
-              v-if="getSelectedMailsIds().length > 0"
-              @click="handleDelete"/>
-        <Icon v-perm="'email:delete'" class="icon delete" icon="fluent:mail-read-20-regular" width="21" height="21"
-              v-if="getSelectedMailsIds().length > 0 && showUnread"
-              @click="handleRead"/>
+  <div class="panel-new email-container">
+    <div class="list-header">
+      <div class="list-title-row">
+        <span class="list-title">{{ $t('inbox') }}</span>
+        <span class="list-count" v-if="total">{{ $t('emailCount', {total: total}) }}</span>
       </div>
-
-      <div class="header-right">
-        <span class="email-count" v-if="total">{{ $t('emailCount', {total: total}) }}</span>
-        <Icon v-if="showAccountIcon" class="more-icon icon" width="16" height="16" icon="akar-icons:dot-grid-fill"
-              @click="changeAccountShow"/>
+      <div class="search-box" @click="$emit('search')">
+        <Icon icon="iconoir:search" width="14" height="14" />
+        Search mail…
+        <span class="kbd">⌘K</span>
       </div>
     </div>
 
-    <div ref="scroll" class="scroll">
+    <!-- Filter Chips -->
+    <div class="filter-chips">
+      <button class="chip active">All</button>
+      <button class="chip">Unread</button>
+      <button class="chip">Starred</button>
+      <button class="chip">Work</button>
+      <button class="chip">Personal</button>
+    </div>
+
+    <div class="header-actions">
+      <el-checkbox v-model="checkAll" :indeterminate="isIndeterminate"
+        :disabled="!emailList.length || loading" @change="handleCheckAllChange" />
+      <div class="header-left">
+        <slot name="first"></slot>
+        <Icon class="icon-btn" icon="ion:reload" width="18" height="18" @click="refresh"/>
+        <Icon v-perm="'email:delete'" class="icon-btn" icon="uiw:delete" width="16" height="16"
+          v-if="getSelectedMailsIds().length > 0" @click="handleDelete"/>
+        <Icon v-perm="'email:delete'" class="icon-btn" icon="fluent:mail-read-20-regular" width="21" height="21"
+          v-if="getSelectedMailsIds().length > 0 && showUnread" @click="handleRead"/>
+      </div>
+      <div class="header-right">
+        <Icon v-if="showAccountIcon" class="icon-btn" width="16" height="16"
+          icon="akar-icons:dot-grid-fill" @click="changeAccountShow"/>
+      </div>
+    </div>
+
+    <div ref="scroll" class="scroll list-scroll">
+
       <UseVirtualList ref="scrollbarRef"
                         @scroll="onScroll"
                         :list="list"
