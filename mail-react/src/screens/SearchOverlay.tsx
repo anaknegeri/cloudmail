@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Avatar from '../components/Avatar'
 import Icon from '../components/Icon'
-import { emailList } from '../request/email'
+import { emailSearch } from '../request/email'
 import type { ApiEmail } from '../types/api'
 
 interface SearchOverlayProps {
@@ -12,8 +12,10 @@ interface SearchOverlayProps {
 export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps) {
   const [q, setQ] = useState('')
   const [emails, setEmails] = useState<ApiEmail[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const debounceRef = useRef<number>()
 
   useEffect(() => { inputRef.current?.focus() }, [])
 
@@ -23,25 +25,39 @@ export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps)
     return () => window.removeEventListener('keydown', h)
   }, [onClose])
 
-  // Load recent emails on mount (200 emails untuk search pool lebih besar)
+  // Search dengan debounce 300ms
   useEffect(() => {
-    setLoading(true)
-    emailList(undefined, 0, undefined, undefined, 200, undefined) // load 200 recent emails
-      .then((res: any) => {
-        const data = res?.list ?? []
-        setEmails(data)
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [])
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
 
-  const results = emails.filter((e: ApiEmail) =>
-    !q ||
-    e.subject?.toLowerCase().includes(q.toLowerCase()) ||
-    e.text?.toLowerCase().includes(q.toLowerCase()) ||
-    e.name?.toLowerCase().includes(q.toLowerCase()) ||
-    e.sendEmail?.toLowerCase().includes(q.toLowerCase())
-  )
+    if (!q || q.trim() === '') {
+      setEmails([])
+      setTotal(0)
+      return
+    }
+
+    setLoading(true)
+    debounceRef.current = setTimeout(() => {
+      emailSearch(q.trim(), 50)
+        .then((res: any) => {
+          setEmails(res?.list ?? [])
+          setTotal(res?.total ?? 0)
+        })
+        .catch(err => {
+          console.error(err)
+          setEmails([])
+          setTotal(0)
+        })
+        .finally(() => setLoading(false))
+    }, 300)
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
+    }
+  }, [q])
 
   const highlight = (text: string) => {
     if (!q) return <>{text}</>
@@ -129,17 +145,17 @@ export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps)
         {/* Results */}
         {loading ? (
           <div className="px-[18px] py-10 text-center text-[13px]" style={{ color: 'var(--ink-3)' }}>
-            Loading…
+            Searching…
           </div>
-        ) : results.length > 0 ? (
+        ) : emails.length > 0 ? (
           <div className="px-[18px] pb-3.5 pt-1.5">
             <div
               className="text-[10.5px] font-bold tracking-[0.08em] uppercase px-1.5 py-2.5"
               style={{ color: 'var(--ink-3)' }}
             >
-              Messages — {results.length}
+              Messages — {emails.length} {total > emails.length && `of ${total}`}
             </div>
-            {results.slice(0, 5).map((e: ApiEmail, i: number) => (
+            {emails.slice(0, 5).map((e: ApiEmail, i: number) => (
               <div
                 key={e.emailId}
                 className={[
@@ -173,9 +189,13 @@ export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps)
               </div>
             ))}
           </div>
+        ) : q ? (
+          <div className="px-[18px] py-10 text-center text-[13px]" style={{ color: 'var(--ink-3)' }}>
+            No matches for "{q}"
+          </div>
         ) : (
           <div className="px-[18px] py-10 text-center text-[13px]" style={{ color: 'var(--ink-3)' }}>
-            {q ? `No matches for "${q}"` : 'Type to search…'}
+            Type to search all your emails…
           </div>
         )}
 
@@ -206,9 +226,11 @@ export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps)
               {item.label}
             </span>
           ))}
-          <span className="ml-auto text-[10px]" style={{ color: 'var(--ink-3)' }}>
-            Searching {emails.length} recent emails
-          </span>
+          {total > 0 && (
+            <span className="ml-auto text-[10px]" style={{ color: 'var(--ink-3)' }}>
+              Full-text search · {total} total
+            </span>
+          )}
         </div>
       </div>
     </div>

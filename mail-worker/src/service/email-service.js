@@ -986,6 +986,57 @@ const emailService = {
 	async read(c, params, userId) {
 		const { emailIds } = params;
 		await orm(c).update(email).set({ unread: emailConst.unread.READ }).where(and(eq(email.userId, userId), inArray(email.emailId, emailIds)));
+	},
+
+	async search(c, params, userId) {
+		let { q, size } = params;
+		
+		if (!q || q.trim() === '') {
+			return { list: [], total: 0 };
+		}
+
+		size = Number(size) || 50;
+		if (size > 200) {
+			size = 200;
+		}
+
+		const query = `%${q.trim()}%`;
+		
+		// Search di subject, text, name, sendEmail
+		const conditions = [
+			eq(email.userId, userId),
+			eq(email.isDel, isDel.NO),
+			or(
+				like(email.subject, query),
+				like(email.text, query),
+				like(email.name, query),
+				like(email.sendEmail, query)
+			)
+		];
+
+		const list = await orm(c)
+			.select()
+			.from(email)
+			.leftJoin(star, and(eq(star.emailId, email.emailId), eq(star.userId, userId)))
+			.where(and(...conditions))
+			.orderBy(desc(email.emailId))
+			.limit(size)
+			.all();
+
+		const totalRow = await orm(c)
+			.select({ total: count() })
+			.from(email)
+			.where(and(...conditions))
+			.get();
+
+		return {
+			list: list.map(row => ({
+				...row.email,
+				starId: row.star?.starId || null,
+				isStar: row.star ? 1 : 0
+			})),
+			total: totalRow?.total || 0
+		};
 	}
 };
 

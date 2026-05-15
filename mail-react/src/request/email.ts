@@ -35,6 +35,12 @@ export function emailRead(emailIds: number[]) {
   return http.put('/email/read', { emailIds })
 }
 
+export function emailSearch(q: string, size?: number) {
+  const params: any = { q }
+  if (size !== undefined) params.size = size
+  return http.get('/email/search', { params })
+}
+
 export function emailSend(form: FormData | object, onProgress?: (e: ProgressEvent) => void) {
   return http.post('/email/send', form, {
     onUploadProgress: onProgress,
