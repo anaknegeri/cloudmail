@@ -22,6 +22,14 @@ interface StatData {
 
 const COLORS = ['#3B82F6', '#13DEB9', '#FBBF24', '#FF7F50', '#C084FC', '#F472B6']
 
+// Chart color palette - konsisten untuk semua chart
+const chartColors = {
+  primary: '#3B82F6',   // blue - untuk data utama (received, main metric)
+  secondary: '#13DEB9', // teal - untuk data sekunder (sent, comparison)
+  accent: '#FBBF24',    // yellow - untuk highlight
+  palette: COLORS       // untuk pie/multi-series
+}
+
 // Recharts theme - konsisten dengan design system
 const chartTheme = {
   grid: { stroke: 'var(--line)', strokeDasharray: '3 3' },
@@ -154,8 +162,8 @@ export default function Analysis() {
               <YAxis {...chartTheme.axis.tick} axisLine={chartTheme.axis.axisLine} allowDecimals={false} />
               <Tooltip {...chartTheme.tooltip} cursor={chartTheme.tooltip.cursor} />
               <Legend {...chartTheme.legend} />
-              <Bar dataKey="receive" name="Received" fill="#3B82F6" radius={[4,4,0,0]} />
-              <Bar dataKey="send"    name="Sent"     fill="#13DEB9" radius={[4,4,0,0]} />
+              <Bar dataKey="receive" name="Received" fill={chartColors.primary} radius={[4,4,0,0]} />
+              <Bar dataKey="send"    name="Sent"     fill={chartColors.secondary} radius={[4,4,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -174,7 +182,7 @@ export default function Analysis() {
                   cx="50%" cy="50%" innerRadius={50} outerRadius={75}
                   paddingAngle={2} label={false}>
                   {senders.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    <Cell key={i} fill={chartColors.palette[i % chartColors.palette.length]} />
                   ))}
                 </Pie>
                 <Tooltip {...chartTheme.tooltip} />
@@ -197,7 +205,7 @@ export default function Analysis() {
                 <YAxis {...chartTheme.axis.tick} axisLine={chartTheme.axis.axisLine} allowDecimals={false} />
                 <Tooltip {...chartTheme.tooltip} cursor={chartTheme.tooltip.cursor} />
                 <Line type="monotone" dataKey="total" name="New Users"
-                  stroke="var(--accent)" strokeWidth={2.5} dot={{ r: 4, fill: 'var(--accent)' }} 
+                  stroke={chartColors.primary} strokeWidth={2.5} dot={{ r: 4, fill: chartColors.primary }} 
                   activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -210,7 +218,7 @@ export default function Analysis() {
         <div className="rounded-xl p-5 flex flex-col items-center justify-center"
           style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-1)' }}>
           <h2 className="font-serif text-base font-semibold mb-3" style={{ color: 'var(--ink)' }}>Sent Today</h2>
-          <p className="text-6xl font-serif font-bold" style={{ color: 'var(--accent)' }}>{daySendTotal}</p>
+          <p className="text-6xl font-serif font-bold" style={{ color: chartColors.primary }}>{daySendTotal}</p>
           <p className="text-xs mt-2" style={{ color: 'var(--ink-3)' }}>emails sent today</p>
         </div>
       </div>
