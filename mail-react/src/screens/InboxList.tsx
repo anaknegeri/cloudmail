@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ApiEmail } from '../types/api'
 import { useAccountStore } from '../store/account'
+import { useMailStore } from '../store/mail'
 import { useEmailListInit } from '../hooks/useEmailListInit'
 import Avatar from '../components/Avatar'
 import Icon from '../components/Icon'
@@ -9,11 +10,8 @@ type EmailFilter = 'all' | 'unread' | 'starred'
 
 interface InboxListProps {
   selectedId: number | null
-  filter: EmailFilter
-  setFilter: (f: EmailFilter) => void
   onSelect: (email: ApiEmail) => void
-  onOpenSearch: () => void
-  emailType?: number  // 1=receive, 2=send, 3=draft
+  emailType?: number  // 0=receive, 1=send, 3=draft
 }
 
 function formatTime(isoString: string): string {
@@ -62,19 +60,19 @@ function getPreview(email: ApiEmail): string {
 
 export default function InboxList({
   selectedId,
-  filter,
-  setFilter,
   onSelect,
-  onOpenSearch,
-  emailType = 1,
+  emailType = 0,
 }: InboxListProps) {
   const { currentAccountId, currentAccount } = useAccountStore()
+  const { setSearchOpen } = useMailStore()
   const allReceive = currentAccount?.allReceive ?? 0
   const { emails, loading, hasMore, loadMore, unreadCount } = useEmailListInit({
     accountId: currentAccountId ?? undefined,
     allReceive,
     type: emailType,
   })
+
+  const [filter, setFilter] = useState<EmailFilter>('all')
 
   // Infinite scroll sentinel
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -109,6 +107,8 @@ export default function InboxList({
     { id: 'starred', label: 'Starred', count: emails.filter(e => e.isStar === 1).length },
   ]
 
+  const pageTitle = emailType === 1 ? 'Sent' : emailType === 3 ? 'Drafts' : 'Inbox'
+
   return (
     <section
       className="rounded-lg flex flex-col min-h-0 overflow-hidden shadow-1"
@@ -117,12 +117,12 @@ export default function InboxList({
       <div className="px-5 pt-[18px] pb-3 flex flex-col gap-3 max-w-[1080px] w-full mx-auto">
         <div className="flex items-center justify-between">
           <div className="font-serif font-medium tracking-[-0.02em]" style={{ fontSize: 32, color: 'var(--ink)' }}>
-            {emailType === 2 ? 'Sent' : emailType === 3 ? 'Drafts' : 'Inbox'}
+            {pageTitle}
           </div>
           <div className="text-[13px]" style={{ color: 'var(--ink-3)' }}>{unreadCount} unread</div>
         </div>
         <button
-          onClick={onOpenSearch}
+          onClick={() => setSearchOpen(true)}
           className="flex items-center gap-2 px-3 py-[9px] rounded-[12px] text-[13px] transition-colors hover:bg-bg-2 text-left"
           style={{ background: 'var(--surface-3)', color: 'var(--ink-3)' }}
         >

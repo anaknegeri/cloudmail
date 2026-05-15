@@ -1,63 +1,62 @@
 import { useState } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useUserStore } from '../store/user'
 import { useSettingStore } from '../store/setting'
 import { useAccountStore } from '../store/account'
+import { useMailStore } from '../store/mail'
 import { hasPerm } from '../lib/perm'
 import Avatar from './Avatar'
 import Icon from './Icon'
 
-type View = 'inbox' | 'sent' | 'draft' | 'star' | 'settings' | string
-
 interface SidebarProps {
   onCompose: () => void
-  currentView: View
-  onView: (v: View) => void
   accounts: { accountId: number; email: string; allReceive: number }[]
   onSwitchAccount: (accountId: number) => void
 }
 
-const MAIN_NAV: { id: View; label: string; icon: string }[] = [
-  { id: 'inbox',    label: 'Inbox',    icon: 'inbox' },
-  { id: 'sent',     label: 'Sent',     icon: 'send' },
-  { id: 'draft',    label: 'Drafts',   icon: 'file-text' },
-  { id: 'star',     label: 'Starred',  icon: 'star' },
+const MAIN_NAV: { id: string; label: string; icon: string; to: string }[] = [
+  { id: 'inbox', label: 'Inbox',   icon: 'inbox',     to: '/' },
+  { id: 'sent',  label: 'Sent',   icon: 'send',      to: '/sent' },
+  { id: 'draft', label: 'Drafts', icon: 'file-text', to: '/draft' },
+  { id: 'star',  label: 'Starred',icon: 'star',       to: '/star' },
 ]
 
-const MANAGE_NAV: { id: string; label: string; icon: string; perm: string }[] = [
-  { id: 'all-email',    label: 'All Mail',        icon: 'mail',        perm: 'all-email:query' },
-  { id: 'user',         label: 'All Users',       icon: 'users',       perm: 'user:query' },
-  { id: 'role',         label: 'Permissions',     icon: 'lock',        perm: 'role:query' },
-  { id: 'analysis',     label: 'Analytics',       icon: 'bar-chart-2', perm: 'analysis:query' },
-  { id: 'reg-key',      label: 'Invite Codes',    icon: 'key',         perm: 'reg-key:query' },
-  { id: 'sys-setting',  label: 'System Settings', icon: 'settings',    perm: 'setting:query' },
+const MANAGE_NAV: { id: string; label: string; icon: string; to: string; perm: string }[] = [
+  { id: 'all-email',   label: 'All Mail',        icon: 'mail',        to: '/admin/all-email',   perm: 'all-email:query' },
+  { id: 'user',       label: 'All Users',       icon: 'users',       to: '/admin/users',       perm: 'user:query' },
+  { id: 'role',       label: 'Permissions',    icon: 'lock',        to: '/admin/roles',       perm: 'role:query' },
+  { id: 'analysis',   label: 'Analytics',       icon: 'bar-chart-2', to: '/admin/analysis',   perm: 'analysis:query' },
+  { id: 'reg-key',    label: 'Invite Codes',    icon: 'key',         to: '/admin/reg-keys',    perm: 'reg-key:query' },
+  { id: 'sys-setting',label: 'System Settings', icon: 'settings',   to: '/admin/settings',    perm: 'setting:query' },
 ]
 
-// Labels section (placeholder - actual labels from API later)
-const LABELS_NAV: { id: string; label: string; color: string }[] = [
-  { id: 'label-work',     label: 'Work',     color: '#5E8FB8' },
-  { id: 'label-personal', label: 'Personal', color: '#E8B89A' },
-  { id: 'label-travel',   label: 'Travel',   color: '#A8C0A4' },
-  { id: 'label-finance',  label: 'Finance',  color: '#B8A8C8' },
+// Labels section (placeholder — actual labels from API later)
+const LABELS_NAV: { id: string; label: string; color: string; to: string }[] = [
+  { id: 'label-work',     label: 'Work',     color: '#5E8FB8', to: '/label/work' },
+  { id: 'label-personal', label: 'Personal', color: '#E8B89A', to: '/label/personal' },
+  { id: 'label-travel',   label: 'Travel',   color: '#A8C0A4', to: '/label/travel' },
+  { id: 'label-finance',  label: 'Finance',  color: '#B8A8C8', to: '/label/finance' },
 ]
 
-export default function Sidebar({ onCompose, currentView, onView, accounts, onSwitchAccount }: SidebarProps) {
+const navItemStyle = (active: boolean): React.CSSProperties => ({
+  background: active ? 'var(--surface)' : undefined,
+  color: active ? 'var(--ink)' : 'var(--ink-2)',
+})
+
+const iconColor = (active: boolean): React.CSSProperties => ({
+  color: active ? 'var(--accent)' : 'var(--ink-3)',
+})
+
+export default function Sidebar({ onCompose, accounts, onSwitchAccount }: SidebarProps) {
   const user = useUserStore(s => s.user)
   const perms = useUserStore(s => s.perms)
   const settings = useSettingStore(s => s.settings)
   const currentAccount = useAccountStore(s => s.currentAccount)
+  const { setComposeOpen } = useMailStore()
+  const navigate = useNavigate()
 
   const [showAccounts, setShowAccounts] = useState(false)
-
   const hasManage = MANAGE_NAV.some(item => hasPerm(item.perm, perms))
-
-  const navItemStyle = (active: boolean) => ({
-    background: active ? 'var(--surface)' : undefined,
-    color: active ? 'var(--ink)' : 'var(--ink-2)',
-  } as React.CSSProperties)
-
-  const iconColor = (active: boolean) => ({
-    color: active ? 'var(--accent)' : 'var(--ink-3)',
-  } as React.CSSProperties)
 
   return (
     <aside className="flex flex-col bg-transparent py-2 px-1 gap-1 overflow-y-auto" style={{ minWidth: 0 }}>
@@ -89,52 +88,68 @@ export default function Sidebar({ onCompose, currentView, onView, accounts, onSw
       <div className="px-4 pt-1 pb-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase" style={{ color: 'var(--ink-3)' }}>
         Mail
       </div>
-      {MAIN_NAV.map(item => {
-        const active = currentView === item.id
-        return (
-          <button
-            key={item.id}
-            onClick={() => onView(item.id)}
-            className={['flex items-center gap-3 py-2 px-3 mx-1 rounded-[10px] text-sm font-medium transition-all text-left', active ? 'shadow-1' : 'hover:bg-s3'].join(' ')}
-            style={navItemStyle(active)}
-          >
-            <span className="w-[18px] h-[18px] grid place-items-center flex-shrink-0" style={iconColor(active)}>
-              <Icon name={item.icon} size={17} />
-            </span>
-            <span className="flex-1">{item.label}</span>
-          </button>
-        )
-      })}
+      {MAIN_NAV.map(item => (
+        <NavLink
+          key={item.id}
+          to={item.to}
+          end={item.to === '/'}
+          className={({ isActive }) =>
+            `flex items-center gap-3 py-2 px-3 mx-1 rounded-[10px] text-sm font-medium transition-all text-left no-underline ${isActive ? 'shadow-1' : 'hover:bg-s3'}`
+          }
+          style={({ isActive }) => ({ ...navItemStyle(isActive), ...(isActive ? {} : {}) })}
+        >
+          {({ isActive }) => (
+            <>
+              <span className="w-[18px] h-[18px] grid place-items-center flex-shrink-0" style={iconColor(isActive)}>
+                <Icon name={item.icon} size={17} />
+              </span>
+              <span className="flex-1">{item.label}</span>
+            </>
+          )}
+        </NavLink>
+      ))}
 
       {/* Labels */}
       <div className="px-4 pt-3 pb-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase" style={{ color: 'var(--ink-3)' }}>
         Labels
       </div>
       {LABELS_NAV.map(item => (
-        <button
+        <NavLink
           key={item.id}
-          onClick={() => onView(item.id)}
-          className={['flex items-center gap-3 py-2 px-3 mx-1 rounded-[10px] text-sm font-medium transition-all text-left', currentView === item.id ? 'shadow-1' : 'hover:bg-s3'].join(' ')}
-          style={navItemStyle(currentView === item.id)}
+          to={item.to}
+          className={({ isActive }) =>
+            `flex items-center gap-3 py-2 px-3 mx-1 rounded-[10px] text-sm font-medium transition-all text-left no-underline ${isActive ? 'shadow-1' : 'hover:bg-s3'}`
+          }
+          style={({ isActive }) => navItemStyle(isActive)}
         >
-          <span className="w-[18px] h-[18px] grid place-items-center flex-shrink-0" style={iconColor(currentView === item.id)}>
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: item.color }} />
-          </span>
-          <span className="flex-1">{item.label}</span>
-        </button>
+          {({ isActive }) => (
+            <>
+              <span className="w-[18px] h-[18px] grid place-items-center flex-shrink-0" style={iconColor(isActive)}>
+                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: item.color }} />
+              </span>
+              <span className="flex-1">{item.label}</span>
+            </>
+          )}
+        </NavLink>
       ))}
 
       {/* Settings */}
-      <button
-        onClick={() => onView('settings')}
-        className={['flex items-center gap-3 py-2 px-3 mx-1 rounded-[10px] text-sm font-medium transition-all text-left', currentView === 'settings' ? 'shadow-1' : 'hover:bg-s3'].join(' ')}
-        style={navItemStyle(currentView === 'settings')}
+      <NavLink
+        to="/settings"
+        className={({ isActive }) =>
+          `flex items-center gap-3 py-2 px-3 mx-1 rounded-[10px] text-sm font-medium transition-all text-left no-underline ${isActive ? 'shadow-1' : 'hover:bg-s3'}`
+        }
+        style={({ isActive }) => navItemStyle(isActive)}
       >
-        <span className="w-[18px] h-[18px] grid place-items-center flex-shrink-0" style={iconColor(currentView === 'settings')}>
-          <Icon name="settings" size={17} />
-        </span>
-        Settings
-      </button>
+        {({ isActive }) => (
+          <>
+            <span className="w-[18px] h-[18px] grid place-items-center flex-shrink-0" style={iconColor(isActive)}>
+              <Icon name="settings" size={17} />
+            </span>
+            <span className="flex-1">Settings</span>
+          </>
+        )}
+      </NavLink>
 
       {/* Account switcher */}
       {accounts.length > 1 && (
@@ -174,22 +189,25 @@ export default function Sidebar({ onCompose, currentView, onView, accounts, onSw
           <div className="px-4 pt-3 pb-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase" style={{ color: 'var(--ink-3)' }}>
             Manage
           </div>
-          {MANAGE_NAV.filter(item => hasPerm(item.perm, perms)).map(item => {
-            const active = currentView === (item.id as View)
-            return (
-              <button
-                key={item.id}
-                onClick={() => onView(item.id as View)}
-                className={['flex items-center gap-3 py-2 px-3 mx-1 rounded-[10px] text-sm font-medium transition-all text-left', active ? 'shadow-1' : 'hover:bg-s3'].join(' ')}
-                style={navItemStyle(active)}
-              >
-                <span className="w-[18px] h-[18px] grid place-items-center flex-shrink-0" style={iconColor(active)}>
-                  <Icon name={item.icon} size={17} />
-                </span>
-                {item.label}
-              </button>
-            )
-          })}
+          {MANAGE_NAV.filter(item => hasPerm(item.perm, perms)).map(item => (
+            <NavLink
+              key={item.id}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex items-center gap-3 py-2 px-3 mx-1 rounded-[10px] text-sm font-medium transition-all text-left no-underline ${isActive ? 'shadow-1' : 'hover:bg-s3'}`
+              }
+              style={({ isActive }) => navItemStyle(isActive)}
+            >
+              {({ isActive }) => (
+                <>
+                  <span className="w-[18px] h-[18px] grid place-items-center flex-shrink-0" style={iconColor(isActive)}>
+                    <Icon name={item.icon} size={17} />
+                  </span>
+                  <span className="flex-1">{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
         </>
       )}
 
