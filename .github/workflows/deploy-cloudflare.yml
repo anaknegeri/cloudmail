@@ -65,6 +65,12 @@ jobs:
         run: pnpm build
         working-directory: ./mail-react
 
+      - name: 📋 Copy frontend build to worker
+        run: |
+          rm -rf ./mail-worker/dist
+          cp -r ./mail-react/dist ./mail-worker/dist
+          echo "✅ Frontend build copied to mail-worker/dist"
+
       - name: 📡 Disable wrangler telemetry
         working-directory: ./mail-worker
         run: pnpm wrangler telemetry disable
