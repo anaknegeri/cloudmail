@@ -6,6 +6,7 @@ on:
     paths:
       - "mail-worker/**"
       - "mail-react/**"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 jobs:
