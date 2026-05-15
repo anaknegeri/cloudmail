@@ -4,15 +4,23 @@ import { roleSelectUse } from '../../request/role'
 
 interface User {
   accountId: number
+  userId: number
   email: string
   name: string
   status: number
   createTime: string
-  userId: number
   allReceive: number
   sort: number
   isDel: number
   latestEmailTime: string | null
+  // extra fields from user/list (joined)
+  receiveEmailCount?: number
+  sendEmailCount?: number
+  accountCount?: number
+  type?: number
+  username?: string
+  avatar?: string
+  sendAction?: { hasPerm: boolean; sendType?: string; sendCount?: number }
 }
 
 interface Role { id: number; name: string }
@@ -50,7 +58,8 @@ export default function Users() {
       if (emailFilter) params.email = emailFilter
       const s = parseInt(statusFilter)
       if (!isNaN(s) && s !== -1) params.status = s
-      const data = await userList(params) as unknown as any[]
+      const res = await userList(params) as unknown as { list: User[]; total: number }
+      const data = Array.isArray(res) ? res : (res?.list ?? [])
       if (reset) { setUsers(data); setPage(2) }
       else { setUsers(prev => [...prev, ...data]); setPage(p => p + 1) }
       setHasMore(data.length >= 30)
@@ -121,7 +130,7 @@ export default function Users() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--line)', color: 'var(--ink-2)' }}>
-                {['Name / Email', 'Received', 'Sent', 'Role', 'Status', 'Created', 'Actions'].map(h => (
+                {['Name / Email', 'Received', 'Sent', 'Mailboxes', 'Status', 'Created', 'Actions'].map(h => (
                   <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
                 ))}
               </tr>
@@ -135,9 +144,9 @@ export default function Users() {
                       <div className="font-medium">{u.name}</div>
                       <div className="text-xs" style={{ color: 'var(--ink-3)' }}>{u.email}</div>
                     </td>
-                    <td className="px-4 py-3 text-center" style={{ color: 'var(--ink-2)' }}>{u.allReceive}</td>
-                    <td className="px-4 py-3 text-center" style={{ color: 'var(--ink-2)' }}>-</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--ink-2)' }}>-</td>
+                    <td className="px-4 py-3 text-center" style={{ color: 'var(--ink-2)' }}>{u.receiveEmailCount ?? 0}</td>
+                    <td className="px-4 py-3 text-center" style={{ color: 'var(--ink-2)' }}>{u.sendEmailCount ?? 0}</td>
+                    <td className="px-4 py-3 text-center" style={{ color: 'var(--ink-2)' }}>{u.accountCount ?? 0}</td>
                     <td className="px-4 py-3">
                       <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                         style={{ background: s.bg, color: s.color }}>{s.label}</span>
