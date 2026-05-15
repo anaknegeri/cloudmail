@@ -1,7 +1,7 @@
 import http from '../lib/http'
 
 export function websiteConfig() {
-  return http.get('/public/website-config', { noMsg: true } as any)
+  return http.get('/setting/websiteConfig', { noMsg: true } as any)
 }
 
 export function settingSet(setting: Record<string,unknown>) { return http.put('/setting/set', setting) }

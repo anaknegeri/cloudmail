@@ -1,7 +1,7 @@
 import http from '../lib/http'
 
 export function loginUserInfo() {
-  return http.get('/my/user')
+  return http.get('/my/loginUserInfo')
 }
 
 export function updateName(name: string) {
@@ -13,7 +13,7 @@ export function updatePassword(oldPassword: string, newPassword: string) {
 }
 
 export function deleteAccount() {
-  return http.delete('/my/user')
+  return http.delete('/my/delete')
 }
 
 export function getAccounts() {
