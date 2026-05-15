@@ -2,13 +2,17 @@ import { useState, useEffect } from 'react'
 import { allEmailList, allEmailDelete } from '../../request/all-email'
 
 interface Email {
-  id: number | string
-  fromName: string
-  fromEmail: string
+  emailId: number
+  sendEmail: string
+  name: string
   toEmail: string
+  toName: string
   subject: string
-  date: string
-  type: string
+  createTime: string
+  type: number   // 0=receive, 1=send
+  isDel: number
+  unread: number
+  userEmail?: string
 }
 
 const Spinner = () => (
@@ -31,7 +35,8 @@ export default function AllEmail() {
       const num = reset ? 1 : page
       const params: any = { type: status, size: 30, num }
       if (searchVal) params[searchType] = searchVal
-      const data = await allEmailList(params) as unknown as any[]
+      const res = await allEmailList(params) as unknown as { list: Email[]; total: number }
+      const data = Array.isArray(res) ? res : (res?.list ?? [])
       if (reset) { setEmails(data); setPage(2) }
       else { setEmails(prev => [...prev, ...data]); setPage(p => p + 1) }
       setHasMore(data.length >= 30)
@@ -41,11 +46,11 @@ export default function AllEmail() {
 
   useEffect(() => { fetchEmails(true) }, [])
 
-  const handleDelete = async (id: number | string) => {
+  const handleDelete = async (emailId: number) => {
     if (!confirm('Delete this email?')) return
     try {
-      await allEmailDelete(String(id) as any)
-      setEmails(prev => prev.filter(e => e.id !== id))
+      await allEmailDelete(String(emailId) as any)
+      setEmails(prev => prev.filter(e => e.emailId !== emailId))
     } catch (e) { console.error(e) }
   }
 
@@ -88,32 +93,37 @@ export default function AllEmail() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--line)', color: 'var(--ink-2)' }}>
-                {['From Name', 'From Email', 'To', 'Subject', 'Date', 'Status', ''].map(h => (
+                {['From', 'To', 'Subject', 'Type', 'Date', ''].map(h => (
                   <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {emails.map(email => (
-                <tr key={email.id} style={{ borderBottom: '1px solid var(--line)' }}>
-                  <td className="px-4 py-3">{email.fromName || '—'}</td>
-                  <td className="px-4 py-3" style={{ color: 'var(--ink-2)' }}>{email.fromEmail}</td>
-                  <td className="px-4 py-3" style={{ color: 'var(--ink-2)' }}>{email.toEmail}</td>
-                  <td className="px-4 py-3 max-w-[200px] truncate">{email.subject}</td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
-                    {email.date ? new Date(email.date).toLocaleDateString() : '—'}
+                <tr key={email.emailId} style={{ borderBottom: '1px solid var(--line)' }}>
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{email.name || '—'}</div>
+                    <div className="text-xs" style={{ color: 'var(--ink-3)' }}>{email.sendEmail}</div>
                   </td>
+                  <td className="px-4 py-3" style={{ color: 'var(--ink-2)' }}>
+                    <div>{email.toName || '—'}</div>
+                    <div className="text-xs" style={{ color: 'var(--ink-3)' }}>{email.toEmail}</div>
+                  </td>
+                  <td className="px-4 py-3 max-w-[200px] truncate">{email.subject || '(no subject)'}</td>
                   <td className="px-4 py-3">
                     <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                       style={{
-                        background: 'var(--accent-soft)',
-                        color: email.type === 'receive' ? 'var(--accent)' : email.type === 'send' ? '#16a34a' : 'var(--ink-3)'
+                        background: email.type === 0 ? '#dbeafe' : '#dcfce7',
+                        color: email.type === 0 ? '#1d4ed8' : '#16a34a'
                       }}>
-                      {email.type}
+                      {email.type === 0 ? 'Receive' : 'Send'}
                     </span>
                   </td>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
+                    {email.createTime ? new Date(email.createTime).toLocaleDateString() : '—'}
+                  </td>
                   <td className="px-4 py-3">
-                    <button onClick={() => handleDelete(email.id)}
+                    <button onClick={() => handleDelete(email.emailId)}
                       className="text-xs px-2 py-1 rounded"
                       style={{ background: '#fee2e2', color: '#dc2626' }}>Delete</button>
                   </td>
