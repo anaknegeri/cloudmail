@@ -8,9 +8,14 @@ export function emailList(
   size?: number,
   type?: number | string
 ) {
-  return http.get('/email/list', {
-    params: { accountId, allReceive, emailId, timeSort, size, type },
-  })
+  const params: any = {}
+  if (accountId !== undefined) params.accountId = accountId
+  if (allReceive !== undefined) params.allReceive = allReceive
+  if (emailId !== undefined) params.emailId = emailId
+  if (timeSort !== undefined) params.timeSort = timeSort
+  if (size !== undefined) params.size = size
+  if (type !== undefined) params.type = type
+  return http.get('/email/list', { params })
 }
 
 export function emailDelete(emailIds: number | number[]) {

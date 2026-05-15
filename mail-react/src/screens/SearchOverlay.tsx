@@ -23,10 +23,10 @@ export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps)
     return () => window.removeEventListener('keydown', h)
   }, [onClose])
 
-  // Load recent emails on mount
+  // Load recent emails on mount (200 emails untuk search pool lebih besar)
   useEffect(() => {
     setLoading(true)
-    emailList(undefined, 0, undefined, 50, 0) // accountId, allReceive, emailId, size, type
+    emailList(undefined, 0, undefined, undefined, 200, undefined) // load 200 recent emails
       .then((res: any) => {
         const data = res?.list ?? []
         setEmails(data)
@@ -206,6 +206,9 @@ export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps)
               {item.label}
             </span>
           ))}
+          <span className="ml-auto text-[10px]" style={{ color: 'var(--ink-3)' }}>
+            Searching {emails.length} recent emails
+          </span>
         </div>
       </div>
     </div>
