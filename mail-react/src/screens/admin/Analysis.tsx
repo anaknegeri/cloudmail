@@ -22,6 +22,30 @@ interface StatData {
 
 const COLORS = ['#3B82F6', '#13DEB9', '#FBBF24', '#FF7F50', '#C084FC', '#F472B6']
 
+// Recharts theme - konsisten dengan design system
+const chartTheme = {
+  grid: { stroke: 'var(--line)', strokeDasharray: '3 3' },
+  axis: { 
+    tick: { fill: 'var(--ink-3)', fontSize: 11 },
+    axisLine: { stroke: 'var(--line)' }
+  },
+  tooltip: {
+    contentStyle: {
+      backgroundColor: 'var(--surface)',
+      border: '1px solid var(--line)',
+      borderRadius: '8px',
+      color: 'var(--ink)',
+      fontSize: '12px',
+      padding: '8px 12px'
+    },
+    cursor: { fill: 'var(--surface-2)', opacity: 0.3 }
+  },
+  legend: {
+    wrapperStyle: { fontSize: '12px', color: 'var(--ink-2)', paddingTop: '12px' },
+    iconType: 'circle' as const
+  }
+}
+
 const Spinner = () => (
   <div className="animate-spin border-2 border-t-transparent rounded-full w-6 h-6"
     style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
@@ -91,13 +115,6 @@ export default function Analysis() {
       .finally(() => setLoading(false))
   }, [])
 
-  const tooltipStyle = {
-    backgroundColor: 'var(--surface)',
-    border: '1px solid var(--line)',
-    borderRadius: 8,
-    color: 'var(--ink)',
-  }
-
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center h-64">
@@ -130,15 +147,15 @@ export default function Analysis() {
       {emailDays.length > 0 && (
         <div className="rounded-xl p-5" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-1)' }}>
           <h2 className="font-serif text-base font-semibold mb-4" style={{ color: 'var(--ink)' }}>Email Activity by Day</h2>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart data={emailDays} barCategoryGap="30%" barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
-              <XAxis dataKey="date" tick={{ fill: 'var(--ink-3)', fontSize: 11 }} />
-              <YAxis tick={{ fill: 'var(--ink-3)', fontSize: 11 }} allowDecimals={false} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 12, color: 'var(--ink-2)' }} />
-              <Bar dataKey="receive" name="Received" fill="#3B82F6" radius={[3,3,0,0]} />
-              <Bar dataKey="send"    name="Sent"     fill="#13DEB9" radius={[3,3,0,0]} />
+              <CartesianGrid {...chartTheme.grid} />
+              <XAxis dataKey="date" {...chartTheme.axis.tick} axisLine={chartTheme.axis.axisLine} />
+              <YAxis {...chartTheme.axis.tick} axisLine={chartTheme.axis.axisLine} allowDecimals={false} />
+              <Tooltip {...chartTheme.tooltip} cursor={chartTheme.tooltip.cursor} />
+              <Legend {...chartTheme.legend} />
+              <Bar dataKey="receive" name="Received" fill="#3B82F6" radius={[4,4,0,0]} />
+              <Bar dataKey="send"    name="Sent"     fill="#13DEB9" radius={[4,4,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -151,21 +168,21 @@ export default function Analysis() {
         <div className="rounded-xl p-5" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-1)' }}>
           <h2 className="font-serif text-base font-semibold mb-3" style={{ color: 'var(--ink)' }}>Email Sources</h2>
           {senders.length > 0 ? (
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={senders} dataKey="value" nameKey="name"
-                  cx="50%" cy="50%" innerRadius={45} outerRadius={70}
-                  paddingAngle={3}>
+                  cx="50%" cy="50%" innerRadius={50} outerRadius={75}
+                  paddingAngle={2} label={false}>
                   {senders.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 11, color: 'var(--ink-2)' }} />
+                <Tooltip {...chartTheme.tooltip} />
+                <Legend {...chartTheme.legend} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[180px] flex items-center justify-center text-sm" style={{ color: 'var(--ink-3)' }}>No data</div>
+            <div className="h-[200px] flex items-center justify-center text-sm" style={{ color: 'var(--ink-3)' }}>No data</div>
           )}
         </div>
 
@@ -173,18 +190,19 @@ export default function Analysis() {
         <div className="rounded-xl p-5" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-1)' }}>
           <h2 className="font-serif text-base font-semibold mb-3" style={{ color: 'var(--ink)' }}>User Growth</h2>
           {userDays.length > 0 ? (
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={200}>
               <LineChart data={userDays}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
-                <XAxis dataKey="date" tick={{ fill: 'var(--ink-3)', fontSize: 10 }} />
-                <YAxis tick={{ fill: 'var(--ink-3)', fontSize: 10 }} allowDecimals={false} />
-                <Tooltip contentStyle={tooltipStyle} />
+                <CartesianGrid {...chartTheme.grid} />
+                <XAxis dataKey="date" {...chartTheme.axis.tick} axisLine={chartTheme.axis.axisLine} />
+                <YAxis {...chartTheme.axis.tick} axisLine={chartTheme.axis.axisLine} allowDecimals={false} />
+                <Tooltip {...chartTheme.tooltip} cursor={chartTheme.tooltip.cursor} />
                 <Line type="monotone" dataKey="total" name="New Users"
-                  stroke="var(--accent)" strokeWidth={2} dot={{ r: 3 }} />
+                  stroke="var(--accent)" strokeWidth={2.5} dot={{ r: 4, fill: 'var(--accent)' }} 
+                  activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[180px] flex items-center justify-center text-sm" style={{ color: 'var(--ink-3)' }}>No data</div>
+            <div className="h-[200px] flex items-center justify-center text-sm" style={{ color: 'var(--ink-3)' }}>No data</div>
           )}
         </div>
 
