@@ -1,15 +1,18 @@
 import { useState, useEffect, useRef } from 'react'
-import { EMAILS } from '../data'
 import Avatar from '../components/Avatar'
 import Icon from '../components/Icon'
+import { emailList } from '../request/email'
+import type { ApiEmail } from '../types/api'
 
 interface SearchOverlayProps {
   onClose: () => void
-  onSelect: (id: string) => void
+  onSelect: (emailId: number) => void
 }
 
 export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps) {
-  const [q, setQ] = useState('moodboard')
+  const [q, setQ] = useState('')
+  const [emails, setEmails] = useState<ApiEmail[]>([])
+  const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { inputRef.current?.focus() }, [])
@@ -20,11 +23,24 @@ export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps)
     return () => window.removeEventListener('keydown', h)
   }, [onClose])
 
-  const results = EMAILS.filter(e =>
+  // Load recent emails on mount
+  useEffect(() => {
+    setLoading(true)
+    emailList(undefined, 0, undefined, 50, 0) // accountId, allReceive, emailId, size, type
+      .then((res: any) => {
+        const data = res?.list ?? []
+        setEmails(data)
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const results = emails.filter((e: ApiEmail) =>
     !q ||
-    e.subject.toLowerCase().includes(q.toLowerCase()) ||
-    e.preview.toLowerCase().includes(q.toLowerCase()) ||
-    e.from.toLowerCase().includes(q.toLowerCase())
+    e.subject?.toLowerCase().includes(q.toLowerCase()) ||
+    e.text?.toLowerCase().includes(q.toLowerCase()) ||
+    e.name?.toLowerCase().includes(q.toLowerCase()) ||
+    e.sendEmail?.toLowerCase().includes(q.toLowerCase())
   )
 
   const highlight = (text: string) => {
@@ -111,7 +127,11 @@ export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps)
         </div>
 
         {/* Results */}
-        {results.length > 0 ? (
+        {loading ? (
+          <div className="px-[18px] py-10 text-center text-[13px]" style={{ color: 'var(--ink-3)' }}>
+            Loading…
+          </div>
+        ) : results.length > 0 ? (
           <div className="px-[18px] pb-3.5 pt-1.5">
             <div
               className="text-[10.5px] font-bold tracking-[0.08em] uppercase px-1.5 py-2.5"
@@ -119,43 +139,43 @@ export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps)
             >
               Messages — {results.length}
             </div>
-            {results.slice(0, 5).map((e, i) => (
+            {results.slice(0, 5).map((e: ApiEmail, i: number) => (
               <div
-                key={e.id}
+                key={e.emailId}
                 className={[
                   'grid gap-3 px-3 py-[9px] rounded-[10px] cursor-pointer transition-colors',
                   i === 0 ? 'bg-s3' : 'hover:bg-s3',
                 ].join(' ')}
                 style={{ gridTemplateColumns: '32px 1fr auto' }}
-                onClick={() => { onSelect(e.id); onClose() }}
+                onClick={() => { onSelect(e.emailId); onClose() }}
               >
-                <Avatar name={e.from} size={32} radius={10} />
+                <Avatar name={e.name || e.sendEmail || 'Unknown'} size={32} radius={10} />
                 <div className="min-w-0">
                   <div
                     className="text-[13.5px] font-semibold truncate"
                     style={{ color: 'var(--ink)' }}
                   >
-                    {highlight(e.subject)}
+                    {highlight(e.subject || '(no subject)')}
                   </div>
                   <div
                     className="text-xs truncate"
                     style={{ color: 'var(--ink-3)' }}
                   >
-                    {e.from} · {highlight(e.preview.slice(0, 80))}…
+                    {e.name || e.sendEmail} · {highlight((e.text || '').slice(0, 80))}…
                   </div>
                 </div>
                 <div
                   className="text-[11.5px] self-center"
                   style={{ color: 'var(--ink-3)' }}
                 >
-                  {e.time}
+                  {e.createTime ? new Date(e.createTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
                 </div>
               </div>
             ))}
           </div>
         ) : (
           <div className="px-[18px] py-10 text-center text-[13px]" style={{ color: 'var(--ink-3)' }}>
-            No matches for &ldquo;{q}&rdquo;
+            {q ? `No matches for "${q}"` : 'Type to search…'}
           </div>
         )}
 
@@ -186,7 +206,6 @@ export default function SearchOverlay({ onClose, onSelect }: SearchOverlayProps)
               {item.label}
             </span>
           ))}
-          <span className="ml-auto">Powered by CloudMail Search</span>
         </div>
       </div>
     </div>
