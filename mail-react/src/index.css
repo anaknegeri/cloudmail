@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ────────────────────────────────────────────────────────────────
+   Design tokens — light theme (default)
+   ──────────────────────────────────────────────────────────────── */
+:root {
+  --bg: #F5F1EA;
+  --bg-2: #EFEAE1;
+  --surface: #FFFFFF;
+  --surface-2: #FBF8F2;
+  --surface-3: #F1EDE4;
+  --ink: #2A2520;
+  --ink-2: #5A5046;
+  --ink-3: #8A8077;
+  --ink-4: #B8AFA4;
+  --line: rgba(42, 37, 32, 0.08);
+  --line-2: rgba(42, 37, 32, 0.04);
+  --accent: #5E8FB8;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E4EDF5;
+  --accent-soft-2: #D2E0EE;
+  --peach: #E8B89A;
+  --peach-soft: #FAEFE5;
+  --sage: #A8C0A4;
+  --sage-soft: #ECF1EA;
+  --lavender: #B8A8C8;
+  --lavender-soft: #EFEAF4;
+  --rose: #D89AAA;
+  --rose-soft: #F6E6EA;
+  --sunshine: #E8D49A;
+  --shadow-1: 0 1px 2px rgba(42, 37, 32, 0.04), 0 1px 1px rgba(42, 37, 32, 0.02);
+  --shadow-2: 0 4px 16px rgba(42, 37, 32, 0.06), 0 1px 2px rgba(42, 37, 32, 0.03);
+  --shadow-3: 0 16px 40px rgba(42, 37, 32, 0.12), 0 4px 8px rgba(42, 37, 32, 0.04);
+  --shadow-pop: 0 24px 60px rgba(42, 37, 32, 0.18);
+}
+
+[data-theme="dark"] {
+  --bg: #18161A;
+  --bg-2: #1F1D22;
+  --surface: #25232A;
+  --surface-2: #2D2A33;
+  --surface-3: #34313A;
+  --ink: #F2EDE5;
+  --ink-2: #BDB6AC;
+  --ink-3: #8A8278;
+  --ink-4: #5A5249;
+  --line: rgba(242, 237, 229, 0.08);
+  --line-2: rgba(242, 237, 229, 0.04);
+  --accent: #88B4DC;
+  --accent-ink: #18161A;
+  --accent-soft: #2E3A48;
+  --accent-soft-2: #3A4A5C;
+  --peach: #E8B89A;
+  --peach-soft: #3E2E25;
+  --sage: #A8C0A4;
+  --sage-soft: #2A3329;
+  --lavender: #B8A8C8;
+  --lavender-soft: #322A3A;
+  --rose: #D89AAA;
+  --rose-soft: #3A2A2F;
+  --sunshine: #E8D49A;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-pop: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Global resets & base
+   ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+#root { height: 100%; }
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+input, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+input::placeholder, textarea::placeholder { color: var(--ink-4); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-4);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Pseudo-element decorations (can't be expressed in Tailwind)
+   ──────────────────────────────────────────────────────────────── */
+
+/* Brand logo cloud shape */
+.brand-mark::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 12px;
+  background: white;
+  border-radius: 999px;
+  box-shadow: -6px 2px 0 -2px white, 7px 1px 0 -3px white;
+}
+
+/* Sidebar weather icon */
+.weather-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: white;
+  border-radius: 999px;
+  box-shadow: -10px 4px 0 -4px white, 12px 2px 0 -6px white, 16px 6px 0 -8px white;
+}
+[data-theme="dark"] .weather-icon::before {
+  background: var(--ink-2);
+  box-shadow: -10px 4px 0 -4px var(--ink-2), 12px 2px 0 -6px var(--ink-2), 16px 6px 0 -8px var(--ink-2);
+}
+
+/* Unread indicator dot */
+.email-row-unread {
+  position: relative;
+}
+.email-row-unread::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* Toggle switch */
+.toggle-thumb::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.toggle-thumb.on::after { transform: translateX(16px); }
+[data-theme="dark"] .toggle-thumb::after { background: var(--ink); }
+
+/* Empty state cloud illustrations */
+.cloud-illus-1 {
+  position: absolute;
+  width: 70px;
+  height: 26px;
+  left: 25px;
+  top: 32px;
+  background: var(--accent-soft);
+  border-radius: 999px;
+}
+.cloud-illus-1::before,
+.cloud-illus-1::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+.cloud-illus-1::before { width: 28px; height: 28px; left: 10px; top: -14px; }
+.cloud-illus-1::after  { width: 22px; height: 22px; left: 36px; top: -16px; }
+
+/* Login art cloud decorations */
+.cloud-deco {
+  position: absolute;
+  background: white;
+  border-radius: 999px;
+  opacity: 0.6;
+  z-index: 1;
+}
+[data-theme="dark"] .cloud-deco { background: rgba(255, 255, 255, 0.06); }
+
+/* ────────────────────────────────────────────────────────────────
+   Animations
+   ──────────────────────────────────────────────────────────────── */
+@keyframes fadeIn  { from { opacity: 0; }              to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.animate-fade-in  { animation: fadeIn  0.18s ease; }
+.animate-slide-up { animation: slideUp 0.25s cubic-bezier(0.2, 0.8, 0.3, 1); }
+
+/* ────────────────────────────────────────────────────────────────
+   Misc helpers
+   ──────────────────────────────────────────────────────────────── */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { scrollbar-width: none; }

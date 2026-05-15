@@ -1,0 +1,1512 @@
+<!-- PART 2 OF 2 — CloudMail-standalone.html (React components + App)
+     Combine with part1.html: replace the closing </body></html> in part1 
+     with everything from the first <script type="text/babel"> tag below. -->
+<script type="text/babel">
+
+// tweaks-panel.jsx — Reusable Tweaks shell + form-control helpers.
+
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+  .twk-field{appearance:none;box-sizing:border-box;width:100%;min-width:0;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
+    overflow-wrap:anywhere}
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+  .twk-num{display:flex;align-items:center;box-sizing:border-box;min-width:0;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+  .twk-chips{display:flex;gap:6px}
+  .twk-chip{position:relative;appearance:none;flex:1;min-width:0;height:46px;
+    padding:0;border:0;border-radius:6px;overflow:hidden;cursor:default;
+    box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);
+    transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
+  .twk-chip:hover{transform:translateY(-1px);
+    box-shadow:0 0 0 .5px rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.12)}
+  .twk-chip[data-on="1"]{box-shadow:0 0 0 1.5px rgba(0,0,0,.85),
+    0 2px 6px rgba(0,0,0,.15)}
+  .twk-chip>span{position:absolute;top:0;bottom:0;right:0;width:34%;
+    display:flex;flex-direction:column;box-shadow:-1px 0 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i{flex:1;box-shadow:0 -1px 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i:first-child{box-shadow:none}
+  .twk-chip svg{position:absolute;top:6px;left:6px;width:13px;height:13px;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+`;
+
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    window.dispatchEvent(new CustomEvent('tweakchange', { detail: edits }));
+  }, []);
+  return [values, setTweak];
+}
+
+function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const hasDeckStage = React.useMemo(
+    () => typeof document !== 'undefined' && !!document.querySelector('deck-stage'),
+    [],
+  );
+  const [railEnabled, setRailEnabled] = React.useState(
+    () => hasDeckStage && !!document.querySelector('deck-stage')?._railEnabled,
+  );
+  React.useEffect(() => {
+    if (!hasDeckStage || railEnabled) return undefined;
+    const onMsg = (e) => {
+      if (e.data && e.data.type === '__omelette_rail_enabled') setRailEnabled(true);
+    };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, [hasDeckStage, railEnabled]);
+  const [railVisible, setRailVisible] = React.useState(() => {
+    try { return localStorage.getItem('deck-stage.railVisible') !== '0'; } catch (e) { return true; }
+  });
+  const toggleRail = (on) => {
+    setRailVisible(on);
+    window.postMessage({ type: '__deck_rail_visible', on }, '*');
+  };
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', clampToViewport);
+      return () => window.removeEventListener('resize', clampToViewport);
+    }
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" data-noncommentable=""
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">
+          {children}
+          {hasDeckStage && railEnabled && !noDeckControls && (
+            <TweakSection label="Deck">
+              <TweakToggle label="Thumbnail rail" value={railVisible} onChange={toggleRail} />
+            </TweakSection>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function TweakSection({ label, children }) {
+  return (
+    <>
+      <div className="twk-sect">{label}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
+  const labelLen = (o) => String(typeof o === 'object' ? o.label : o).length;
+  const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
+  const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
+  if (!fitsAsSegments) {
+    const resolve = (s) => {
+      const m = options.find((o) => String(typeof o === 'object' ? o.value : o) === s);
+      return m === undefined ? s : typeof m === 'object' ? m.value : m;
+    };
+    return <TweakSelect label={label} value={value} options={options}
+                        onChange={(s) => onChange(resolve(s))} />;
+  }
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    if (v0 !== valueRef.current) onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      if (v !== valueRef.current) onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
+  const clamp = (n) => {
+    if (min != null && n < min) return min;
+    if (max != null && n > max) return max;
+    return n;
+  };
+  const startRef = React.useRef({ x: 0, val: 0 });
+  const onScrubStart = (e) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, val: value };
+    const decimals = (String(step).split('.')[1] || '').length;
+    const move = (ev) => {
+      const dx = ev.clientX - startRef.current.x;
+      const raw = startRef.current.val + dx * step;
+      const snapped = Math.round(raw / step) * step;
+      onChange(clamp(Number(snapped.toFixed(decimals))));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="twk-num">
+      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+      <input type="number" value={value} min={min} max={max} step={step}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      {unit && <span className="twk-num-unit">{unit}</span>}
+    </div>
+  );
+}
+
+function __twkIsLight(hex) {
+  const h = String(hex).replace('#', '');
+  const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, '0');
+  const n = parseInt(x.slice(0, 6), 16);
+  if (Number.isNaN(n)) return true;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return r * 299 + g * 587 + b * 114 > 148000;
+}
+
+const __TwkCheck = ({ light }) => (
+  <svg viewBox="0 0 14 14" aria-hidden="true">
+    <path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2"
+          strokeLinecap="round" strokeLinejoin="round"
+          stroke={light ? 'rgba(0,0,0,.78)' : '#fff'} />
+  </svg>
+);
+
+function TweakColor({ label, value, options, onChange }) {
+  if (!options || !options.length) {
+    return (
+      <div className="twk-row twk-row-h">
+        <div className="twk-lbl"><span>{label}</span></div>
+        <input type="color" className="twk-swatch" value={value}
+               onChange={(e) => onChange(e.target.value)} />
+      </div>
+    );
+  }
+  const key = (o) => String(JSON.stringify(o)).toLowerCase();
+  const cur = key(value);
+  return (
+    <TweakRow label={label}>
+      <div className="twk-chips" role="radiogroup">
+        {options.map((o, i) => {
+          const colors = Array.isArray(o) ? o : [o];
+          const [hero, ...rest] = colors;
+          const sup = rest.slice(0, 4);
+          const on = key(o) === cur;
+          return (
+            <button key={i} type="button" className="twk-chip" role="radio"
+                    aria-checked={on} data-on={on ? '1' : '0'}
+                    aria-label={colors.join(', ')} title={colors.join(' · ')}
+                    style={{ background: hero }}
+                    onClick={() => onChange(o)}>
+              {sup.length > 0 && (
+                <span>
+                  {sup.map((c, j) => <i key={j} style={{ background: c }} />)}
+                </span>
+              )}
+              {on && <__TwkCheck light={__twkIsLight(hero)} />}
+            </button>
+          );
+        })}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }) {
+  return (
+    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
+            onClick={onClick}>{label}</button>
+  );
+}
+
+Object.assign(window, {
+  useTweaks, TweaksPanel, TweakSection, TweakRow,
+  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
+  TweakText, TweakNumber, TweakColor, TweakButton,
+});
+</script>
+<script type="text/babel">
+/* global React */
+const { useState, useEffect, useRef } = React;
+
+function Icon({ name, size = 18, stroke = 1.6 }) {
+  const props = {
+    width: size, height: size, viewBox: '0 0 24 24',
+    fill: 'none', stroke: 'currentColor',
+    strokeWidth: stroke, strokeLinecap: 'round', strokeLinejoin: 'round',
+  };
+  switch (name) {
+    case 'inbox':    return <svg {...props}><path d="M3 13l3-8h12l3 8v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6z"/><path d="M3 13h5l1 2h6l1-2h5"/></svg>;
+    case 'star':     return <svg {...props}><path d="M12 3l2.6 5.6 6 .6-4.5 4.2 1.3 6L12 16.6 6.6 19.4l1.3-6L3.4 9.2l6-.6L12 3z"/></svg>;
+    case 'star-fill':return <svg {...props} fill="currentColor"><path d="M12 3l2.6 5.6 6 .6-4.5 4.2 1.3 6L12 16.6 6.6 19.4l1.3-6L3.4 9.2l6-.6L12 3z"/></svg>;
+    case 'moon':     return <svg {...props}><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>;
+    case 'send':     return <svg {...props}><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>;
+    case 'edit':     return <svg {...props}><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>;
+    case 'archive':  return <svg {...props}><rect x="3" y="3" width="18" height="5" rx="1"/><path d="M5 8v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>;
+    case 'shield':   return <svg {...props}><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6l8-3z"/></svg>;
+    case 'trash':    return <svg {...props}><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>;
+    case 'search':   return <svg {...props}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>;
+    case 'settings': return <svg {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>;
+    case 'tag':      return <svg {...props}><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1.4"/></svg>;
+    case 'users':    return <svg {...props}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+    case 'reply':    return <svg {...props}><path d="M9 17l-5-5 5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>;
+    case 'reply-all':return <svg {...props}><path d="M7 17l-5-5 5-5"/><path d="M12 17l-5-5 5-5"/><path d="M22 18v-2a4 4 0 0 0-4-4h-7"/></svg>;
+    case 'forward':  return <svg {...props}><path d="M15 17l5-5-5-5"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>;
+    case 'more':     return <svg {...props}><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>;
+    case 'close':    return <svg {...props}><path d="M18 6L6 18M6 6l12 12"/></svg>;
+    case 'minimize': return <svg {...props}><path d="M5 12h14"/></svg>;
+    case 'expand':   return <svg {...props}><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>;
+    case 'paperclip':return <svg {...props}><path d="M21.4 11.05l-9 9a5.5 5.5 0 0 1-7.78-7.78l9-9a3.7 3.7 0 0 1 5.2 5.2L10 17.1a1.8 1.8 0 0 1-2.6-2.6L15.2 6.7"/></svg>;
+    case 'image':    return <svg {...props}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>;
+    case 'smile':    return <svg {...props}><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>;
+    case 'sparkle':  return <svg {...props}><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 14l.7 2L22 17l-2.3 1L19 20l-.7-2L16 17l2.3-1z"/></svg>;
+    case 'check':    return <svg {...props}><path d="M20 6L9 17l-5-5"/></svg>;
+    case 'arrow-right': return <svg {...props}><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>;
+    case 'plus':     return <svg {...props}><path d="M12 5v14"/><path d="M5 12h14"/></svg>;
+    case 'mail':     return <svg {...props}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>;
+    case 'bell':     return <svg {...props}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>;
+    case 'globe':    return <svg {...props}><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/></svg>;
+    case 'lock':     return <svg {...props}><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>;
+    case 'sun':      return <svg {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>;
+    case 'palette':  return <svg {...props}><path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.5 1.5-1.3s-.5-1.3-.5-2c0-.8.7-1.4 1.5-1.4H17a4 4 0 0 0 4-4 9 9 0 0 0-9-9z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>;
+    case 'kbd':      return <svg {...props}><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>;
+    case 'chevron-right': return <svg {...props}><path d="M9 18l6-6-6-6"/></svg>;
+    case 'corner-up-left':return <svg {...props}><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>;
+    case 'calendar': return <svg {...props}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+    case 'paint':    return <svg {...props}><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M10 7h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-1 4h-4l-1-4h-3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/></svg>;
+    default: return null;
+  }
+}
+window.Icon = Icon;
+
+function Avatar({ name, size = 36, radius = 12 }) {
+  const [c1, c2] = window.colorForName(name || '?');
+  const init = window.initials(name || '?');
+  const style = {
+    width: size, height: size, borderRadius: radius,
+    background: `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`,
+    fontSize: Math.round(size * 0.36),
+  };
+  return <div className="avatar" style={style}>{init}</div>;
+}
+window.Avatar = Avatar;
+
+function Sidebar({ currentFolder, onFolderChange, onCompose, onView, currentView }) {
+  return (
+    <aside className="sidebar">
+      <div className="brand">
+        <div className="brand-mark" aria-hidden="true"></div>
+        <div className="brand-name">Cloud<em>mail</em></div>
+      </div>
+
+      <button className="compose-btn" onClick={onCompose}>
+        <span className="compose-icon"><Icon name="edit" size={13} stroke={2.2}/></span>
+        Compose
+      </button>
+
+      {window.FOLDERS.map(f => (
+        <div
+          key={f.id}
+          className={`nav-item ${currentFolder === f.id && currentView === 'inbox' ? 'active' : ''}`}
+          onClick={() => { onFolderChange(f.id); onView('inbox'); }}
+        >
+          <span className="nav-icon"><Icon name={f.icon} size={17}/></span>
+          {f.name}
+          {f.count != null && <span className="nav-count">{f.count}</span>}
+        </div>
+      ))}
+
+      <div className="sidebar-section">Labels</div>
+      {Object.entries(window.LABELS).map(([k, l]) => (
+        <div key={k} className="nav-item">
+          <span className="label-dot" style={{ background: l.color }}></span>
+          {l.name}
+        </div>
+      ))}
+
+      <div className="weather-card">
+        <div className="weather-icon"></div>
+        <div className="weather-meta">
+          <div className="temp">14°</div>
+          <div className="label">Inbox feels light today</div>
+        </div>
+      </div>
+
+      <div style={{flex: 1}}></div>
+
+      <div className={`nav-item ${currentView === 'settings' ? 'active' : ''}`} onClick={() => onView('settings')}>
+        <span className="nav-icon"><Icon name="settings" size={17}/></span>
+        Settings
+      </div>
+
+      <div className="user-chip">
+        <Avatar name="Alex Hartley" size={32} radius={10}/>
+        <div className="meta">
+          <div className="name">Alex Hartley</div>
+          <div className="email">alex@cloudmail.app</div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+window.Sidebar = Sidebar;
+</script>
+<script type="text/babel">
+/* global React, Icon, Avatar */
+const { useState: useS, useEffect: useE, useRef: useR } = React;
+
+function InboxList({ emails, selectedId, onSelect, filter, setFilter, onOpenSearch, wide }) {
+  const counts = {
+    all: emails.length,
+    unread: emails.filter(e => e.unread).length,
+    starred: emails.filter(e => e.starred).length,
+  };
+
+  const filtered = emails.filter(e => {
+    if (filter === 'unread') return e.unread;
+    if (filter === 'starred') return e.starred;
+    if (filter === 'work' || filter === 'personal' || filter === 'reading' || filter === 'finance' || filter === 'travel') {
+      return e.labels.includes(filter);
+    }
+    return true;
+  });
+
+  const groups = [];
+  const seen = {};
+  filtered.forEach(e => {
+    if (!seen[e.date]) { seen[e.date] = []; groups.push({ label: e.date, items: seen[e.date] }); }
+    seen[e.date].push(e);
+  });
+
+  const labelFor = d => ({today: 'Today', yesterday: 'Yesterday', 'this week': 'This week', earlier: 'Earlier'}[d] || d);
+
+  return (
+    <section className="panel list-panel">
+      <div className="list-header">
+        <div className="list-title-row">
+          <div className="list-title">Inbox</div>
+          <div className="list-count">{counts.unread} unread</div>
+        </div>
+        <div className="search-box" onClick={onOpenSearch}>
+          <Icon name="search" size={15}/>
+          Search mail, people, files…
+          <span className="kbd">⌘K</span>
+        </div>
+      </div>
+
+      <div className="filter-chips">
+        {[
+          { id: 'all', label: 'All', count: counts.all },
+          { id: 'unread', label: 'Unread', count: counts.unread },
+          { id: 'starred', label: 'Starred', count: counts.starred },
+          { id: 'work', label: 'Work' },
+          { id: 'personal', label: 'Personal' },
+          { id: 'reading', label: 'Reading' },
+          { id: 'finance', label: 'Finance' },
+        ].map(c => (
+          <button
+            key={c.id}
+            className={`chip ${filter === c.id ? 'active' : ''}`}
+            onClick={() => setFilter(c.id)}
+          >
+            {c.label}
+            {c.count != null && <span className="chip-count">{c.count}</span>}
+          </button>
+        ))}
+      </div>
+
+      <div className="list-scroll">
+        {groups.map(g => (
+          <div key={g.label} className="email-group">
+            <div className="email-group-label">{labelFor(g.label)}</div>
+            {g.items.map(e => (
+              <EmailRow
+                key={e.id}
+                email={e}
+                selected={selectedId === e.id}
+                onClick={() => onSelect(e.id)}
+                wide={wide}
+              />
+            ))}
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div style={{padding: '40px 20px', textAlign: 'center', color: 'var(--ink-3)', fontSize: 13}}>
+            No mail matches this filter.
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function EmailRow({ email, selected, onClick, wide }) {
+  if (wide) {
+    return (
+      <div className={`email-row ${selected ? 'active' : ''} ${email.unread ? 'unread' : ''}`} onClick={onClick}>
+        <Avatar name={email.from} size={44} radius={14}/>
+        <div className="email-from-col">
+          <span className="email-from">{email.from}</span>
+          <span className="email-handle">{email.fromEmail}</span>
+        </div>
+        <div className="email-body">
+          <span className="email-subject">{email.subject}</span>
+          <span className="email-preview">— {email.preview}</span>
+        </div>
+        <div className="email-meta">
+          {email.labels.length > 0 && (() => {
+            const lbl = window.LABELS[email.labels[0]];
+            return lbl ? (
+              <span className="tag-pill" style={{ background: `${lbl.color}1F`, color: lbl.color }}>
+                {lbl.name}
+              </span>
+            ) : null;
+          })()}
+          {email.attachments.length > 0 && <Icon name="paperclip" size={13}/>}
+          {email.starred && <span style={{color: '#E8B355'}}><Icon name="star-fill" size={13}/></span>}
+          <span className="time">{email.time}</span>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className={`email-row ${selected ? 'active' : ''} ${email.unread ? 'unread' : ''}`} onClick={onClick}>
+      <Avatar name={email.from} size={36} radius={12}/>
+      <div className="email-body">
+        <div className="email-row-top">
+          <span className="email-from">{email.from}</span>
+        </div>
+        <div className="email-subject">{email.subject}</div>
+        <div className="email-preview">{email.preview}</div>
+        {email.labels.length > 0 && (
+          <div className="email-tags">
+            {email.labels.slice(0, 2).map(l => {
+              const lbl = window.LABELS[l];
+              if (!lbl) return null;
+              return (
+                <span key={l} className="tag-pill" style={{ background: `${lbl.color}1F`, color: lbl.color }}>
+                  {lbl.name}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <div className="email-meta">
+        <span className="time">{email.time}</span>
+        <div style={{display: 'flex', gap: 4, alignItems: 'center'}}>
+          {email.attachments.length > 0 && <Icon name="paperclip" size={13}/>}
+          {email.starred && <span style={{color: '#E8B355'}}><Icon name="star-fill" size={13}/></span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+window.InboxList = InboxList;
+
+function Reader({ email, onClose, onArchive }) {
+  if (!email) {
+    return (
+      <section className="panel">
+        <div className="empty">
+          <div className="empty-inner">
+            <div className="empty-illus">
+              <div className="cloud-1"></div>
+              <div className="cloud-2"></div>
+              <div className="cloud-3"></div>
+            </div>
+            <div className="empty-title">A quiet inbox is a good inbox</div>
+            <div className="empty-sub">Pick a message from the list to read it here, or start something new.</div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  return (
+    <section className="panel reader-panel">
+      <div className="reader-toolbar">
+        <button className="icon-btn" title="Back" onClick={onClose}><Icon name="corner-up-left" size={17}/></button>
+        <div className="toolbar-divider"></div>
+        <button className="icon-btn" title="Archive" onClick={onArchive}><Icon name="archive" size={17}/></button>
+        <button className="icon-btn" title="Snooze"><Icon name="moon" size={17}/></button>
+        <button className="icon-btn danger" title="Trash"><Icon name="trash" size={17}/></button>
+        <div className="toolbar-divider"></div>
+        <button className="icon-btn" title="Label"><Icon name="tag" size={17}/></button>
+        <button className="icon-btn" title="Mark unread"><Icon name="mail" size={17}/></button>
+        <div className="toolbar-right">
+          <button className="icon-btn" title="Reply"><Icon name="reply" size={17}/></button>
+          <button className="icon-btn" title="Reply all"><Icon name="reply-all" size={17}/></button>
+          <button className="icon-btn" title="Forward"><Icon name="forward" size={17}/></button>
+          <div className="toolbar-divider"></div>
+          <button className="icon-btn" title="More"><Icon name="more" size={17}/></button>
+        </div>
+      </div>
+
+      <div className="reader-scroll">
+        <div className="reader-inner">
+          <h1 className="reader-subject">{email.subject}</h1>
+
+          {email.labels.length > 0 && (
+            <div className="reader-labels">
+              {email.labels.map(l => {
+                const lbl = window.LABELS[l];
+                if (!lbl) return null;
+                return (
+                  <span key={l} className="tag-pill" style={{ background: `${lbl.color}1F`, color: lbl.color }}>
+                    {lbl.name}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="reader-sender">
+            <Avatar name={email.from} size={44} radius={14}/>
+            <div className="reader-sender-meta">
+              <div className="from">{email.from} <span style={{color: 'var(--ink-3)', fontWeight: 500, fontSize: 13}}>&lt;{email.fromEmail}&gt;</span></div>
+              <div className="to">to me · {email.time === '9:42' ? 'just now' : email.time}</div>
+            </div>
+            <div className="reader-sender-time">{email.date === 'today' ? 'Today' : email.date === 'yesterday' ? 'Yesterday' : email.time}, {email.time === '9:42' ? '9:42 AM' : '2026'}</div>
+          </div>
+
+          {email.summary && (
+            <div className="reader-summary">
+              <div className="summary-label">
+                <Icon name="sparkle" size={12}/> AI summary
+              </div>
+              <div className="summary-text">{email.summary}</div>
+              <div className="summary-actions">
+                <span className="summary-action">Extract tasks</span>
+                <span className="summary-action">Suggest a reply</span>
+                <span className="summary-action">Find related</span>
+              </div>
+            </div>
+          )}
+
+          <div className="reader-body">
+            {email.body.map((p, i) => (
+              <p key={i} style={p.includes('•') ? {whiteSpace: 'pre-line'} : {}}>{p}</p>
+            ))}
+            {email.attachments.length > 0 && (
+              <div className="attachment-row">
+                {email.attachments.map((a, i) => (
+                  <div key={i} className="attachment">
+                    <div className="attachment-thumb" style={{ background: a.color }}>
+                      {a.kind.toUpperCase()}
+                    </div>
+                    <div className="attachment-meta">
+                      <div className="attachment-name">{a.name}</div>
+                      <div className="attachment-size">{a.size}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {email.sig && <div className="sig" style={{whiteSpace: 'pre-line'}}>{email.sig}</div>}
+          </div>
+
+          {email.quickReplies && email.quickReplies.length > 0 && (
+            <div className="quick-reply">
+              <div className="quick-reply-label">
+                <span style={{display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--lavender)'}}>
+                  <Icon name="sparkle" size={11}/> Suggested replies
+                </span>
+              </div>
+              <div className="quick-reply-options">
+                {email.quickReplies.map((q, i) => (
+                  <button key={i} className="quick-reply-option">{q}</button>
+                ))}
+              </div>
+              <div className="reply-bar">
+                <input placeholder={`Reply to ${email.from.split(' ')[0]}…`}/>
+                <button className="icon-btn" title="Attach"><Icon name="paperclip" size={16}/></button>
+                <button className="icon-btn" title="Emoji"><Icon name="smile" size={16}/></button>
+                <button className="reply-send"><Icon name="send" size={14}/></button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+window.Reader = Reader;
+</script>
+<script type="text/babel">
+/* global React, Icon, Avatar */
+
+function Compose({ onClose }) {
+  const [to, setTo] = React.useState([{ name: 'Maya Okafor', email: 'maya@northwindstudio.co' }]);
+  const [showCc, setShowCc] = React.useState(false);
+  const [subject, setSubject] = React.useState('Re: Friday review — moodboards are ready');
+  const [body, setBody] = React.useState('');
+  const placeholder = `Hi Maya,\n\n`;
+
+  return (
+    <div className="compose-backdrop" onClick={onClose}>
+      <div className="compose-window" onClick={e => e.stopPropagation()}>
+        <div className="compose-header">
+          <div className="compose-title">New message</div>
+          <div className="compose-actions">
+            <button className="icon-btn" title="Minimize"><Icon name="minimize" size={16}/></button>
+            <button className="icon-btn" title="Expand"><Icon name="expand" size={16}/></button>
+            <button className="icon-btn" title="Close" onClick={onClose}><Icon name="close" size={16}/></button>
+          </div>
+        </div>
+
+        <div className="compose-field">
+          <label>To</label>
+          <div style={{flex: 1, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center'}}>
+            {to.map((r, i) => (
+              <span key={i} className="recipient-chip">
+                <Avatar name={r.name} size={20} radius={999}/>
+                {r.name}
+                <span className="remove" onClick={() => setTo(to.filter((_, j) => j !== i))}>×</span>
+              </span>
+            ))}
+            <input
+              style={{minWidth: 60, flex: 1, padding: '2px 0'}}
+              placeholder="Add recipient…"
+            />
+          </div>
+          {!showCc && (
+            <button className="btn-ghost" style={{padding: '4px 8px', fontSize: 12, color: 'var(--ink-3)'}} onClick={() => setShowCc(true)}>Cc / Bcc</button>
+          )}
+        </div>
+
+        {showCc && (
+          <React.Fragment>
+            <div className="compose-field">
+              <label>Cc</label>
+              <input placeholder="cc@example.com"/>
+            </div>
+            <div className="compose-field">
+              <label>Bcc</label>
+              <input placeholder="bcc@example.com"/>
+            </div>
+          </React.Fragment>
+        )}
+
+        <div className="compose-field">
+          <label>Subject</label>
+          <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="What is this about?"/>
+        </div>
+
+        <div className="compose-body">
+          <textarea
+            value={body}
+            onChange={e => setBody(e.target.value)}
+            placeholder={placeholder + 'Thanks for these — Direction C is gorgeous. A few thoughts inline below, and yes, 10:30 Friday works.\n\nA'}
+            autoFocus
+          />
+          {body.length === 0 && (
+            <div className="compose-ai-suggest">
+              <span className="ai-dot"><Icon name="sparkle" size={11}/></span>
+              <span><strong>Draft for you:</strong> a polite reply confirming Friday 10:30 and noting Direction C as the favourite.</span>
+              <button className="btn btn-ghost" style={{marginLeft: 'auto', padding: '4px 10px', fontSize: 12}}>Use draft</button>
+            </div>
+          )}
+        </div>
+
+        <div className="compose-footer">
+          <button className="btn btn-primary">
+            Send
+            <Icon name="arrow-right" size={14}/>
+          </button>
+          <button className="btn btn-ghost"><Icon name="kbd" size={15}/></button>
+          <button className="btn btn-ghost"><Icon name="paperclip" size={15}/></button>
+          <button className="btn btn-ghost"><Icon name="image" size={15}/></button>
+          <button className="btn btn-ghost"><Icon name="smile" size={15}/></button>
+          <button className="btn btn-ghost"><Icon name="sparkle" size={15}/></button>
+          <div style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12}}>
+            <span style={{fontSize: 12, color: 'var(--ink-3)'}}>Saved just now</span>
+            <button className="icon-btn" title="More"><Icon name="more" size={16}/></button>
+            <button className="icon-btn danger" title="Discard"><Icon name="trash" size={16}/></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+window.Compose = Compose;
+
+function SearchOverlay({ onClose, onSelect }) {
+  const [q, setQ] = React.useState('moodboard');
+  const inputRef = React.useRef(null);
+  React.useEffect(() => { inputRef.current?.focus(); }, []);
+
+  React.useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose]);
+
+  const results = window.EMAILS.filter(e =>
+    !q || e.subject.toLowerCase().includes(q.toLowerCase()) ||
+    e.preview.toLowerCase().includes(q.toLowerCase()) ||
+    e.from.toLowerCase().includes(q.toLowerCase())
+  );
+
+  const highlight = (text) => {
+    if (!q) return text;
+    const idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if (idx === -1) return text;
+    return <React.Fragment>{text.slice(0, idx)}<mark>{text.slice(idx, idx + q.length)}</mark>{text.slice(idx + q.length)}</React.Fragment>;
+  };
+
+  return (
+    <div className="search-overlay" onClick={onClose}>
+      <div className="search-modal" onClick={e => e.stopPropagation()}>
+        <div className="search-input-row">
+          <Icon name="search" size={18}/>
+          <input
+            ref={inputRef}
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            placeholder="Search mail, people, files…"
+          />
+          <button className="icon-btn" onClick={onClose}><Icon name="close" size={16}/></button>
+        </div>
+
+        <div className="search-filters">
+          <button className="chip active">Any</button>
+          <button className="chip"><Icon name="paperclip" size={11}/> Has files</button>
+          <button className="chip"><Icon name="star" size={11}/> Starred</button>
+          <button className="chip">From: anyone</button>
+          <button className="chip">Last 30 days</button>
+        </div>
+
+        {results.length > 0 && (
+          <div className="search-section">
+            <div className="search-section-label">Messages — {results.length}</div>
+            {results.slice(0, 5).map((e, i) => (
+              <div key={e.id} className={`search-result ${i === 0 ? 'selected' : ''}`}
+                   onClick={() => { onSelect(e.id); onClose(); }}>
+                <Avatar name={e.from} size={32} radius={10}/>
+                <div className="search-result-text">
+                  <div className="search-result-subject">{highlight(e.subject)}</div>
+                  <div className="search-result-preview">{e.from} · {highlight(e.preview.slice(0, 80))}…</div>
+                </div>
+                <div className="search-result-time">{e.time}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {results.length === 0 && (
+          <div className="search-section">
+            <div style={{padding: '40px 20px', textAlign: 'center', color: 'var(--ink-3)', fontSize: 13}}>
+              No matches for "{q}"
+            </div>
+          </div>
+        )}
+
+        <div className="search-footer">
+          <span><span className="kbd">↑</span><span className="kbd">↓</span> navigate</span>
+          <span><span className="kbd">↵</span> open</span>
+          <span><span className="kbd">esc</span> close</span>
+          <span style={{marginLeft: 'auto'}}>Powered by CloudMail Search</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+window.SearchOverlay = SearchOverlay;
+
+function Settings({ theme, onThemeChange }) {
+  const [section, setSection] = React.useState('appearance');
+  const [density, setDensity] = React.useState('balanced');
+  const [accent, setAccent] = React.useState('sky');
+  const [aiOn, setAiOn] = React.useState(true);
+  const [previewOn, setPreviewOn] = React.useState(true);
+  const [autoArchive, setAutoArchive] = React.useState(false);
+  const [reminders, setReminders] = React.useState(true);
+
+  const sections = [
+    { id: 'account',    label: 'Account',     icon: 'users' },
+    { id: 'appearance', label: 'Appearance',  icon: 'palette' },
+    { id: 'inbox',      label: 'Inbox',       icon: 'inbox' },
+    { id: 'compose',    label: 'Writing',     icon: 'edit' },
+    { id: 'ai',         label: 'AI assistant',icon: 'sparkle' },
+    { id: 'notifs',     label: 'Notifications', icon: 'bell' },
+    { id: 'privacy',    label: 'Privacy',     icon: 'lock' },
+    { id: 'aliases',    label: 'Aliases',     icon: 'globe' },
+  ];
+
+  const accents = [
+    { id: 'sky',     color: '#5E8FB8', label: 'Sky' },
+    { id: 'peach',   color: '#D87856', label: 'Peach' },
+    { id: 'sage',    color: '#7AA078', label: 'Sage' },
+    { id: 'lavender',color: '#8A78B0', label: 'Lavender' },
+    { id: 'rose',    color: '#B86A82', label: 'Rose' },
+  ];
+
+  return (
+    <div className="settings">
+      <aside className="settings-nav">
+        <div className="settings-nav-title">Settings</div>
+        {sections.map(s => (
+          <div
+            key={s.id}
+            className={`nav-item ${section === s.id ? 'active' : ''}`}
+            onClick={() => setSection(s.id)}
+          >
+            <span className="nav-icon"><Icon name={s.icon} size={16}/></span>
+            {s.label}
+          </div>
+        ))}
+      </aside>
+
+      <main className="settings-content">
+        {section === 'appearance' && (
+          <React.Fragment>
+            <h2>Appearance</h2>
+            <p className="lead">Make CloudMail feel like yours.</p>
+
+            <div className="setting-group">
+              <div className="setting-group-title">Theme</div>
+              <div className="theme-swatch-row">
+                {[
+                  { id: 'light', label: 'Light', bg: '#F5F1EA', dot: '#FFFFFF' },
+                  { id: 'dark',  label: 'Dark',  bg: '#18161A', dot: '#25232A' },
+                  { id: 'auto',  label: 'Match system', bg: 'linear-gradient(90deg, #F5F1EA 50%, #18161A 50%)', dot: '#E8B89A' },
+                ].map(t => (
+                  <div
+                    key={t.id}
+                    className={`theme-swatch ${theme === t.id ? 'active' : ''}`}
+                    style={{ background: t.bg, color: t.id === 'dark' ? '#F2EDE5' : '#2A2520' }}
+                    onClick={() => onThemeChange(t.id)}
+                  >
+                    <span className="swatch-dot" style={{ background: t.dot }}></span>
+                    {t.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="setting-group">
+              <div className="setting-group-title">Accent color</div>
+              <div className="theme-swatch-row">
+                {accents.map(a => (
+                  <div
+                    key={a.id}
+                    className={`theme-swatch ${accent === a.id ? 'active' : ''}`}
+                    style={{ background: 'var(--surface-2)' }}
+                    onClick={() => setAccent(a.id)}
+                  >
+                    <span className="swatch-dot" style={{ background: a.color, borderColor: a.color }}></span>
+                    {a.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="setting-group">
+              <div className="setting-group-title">Density</div>
+              <div className="theme-swatch-row">
+                {['comfortable', 'balanced', 'compact'].map(d => (
+                  <div
+                    key={d}
+                    className={`theme-swatch ${density === d ? 'active' : ''}`}
+                    style={{ background: 'var(--surface-2)', textTransform: 'capitalize' }}
+                    onClick={() => setDensity(d)}
+                  >
+                    {d}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="setting-group">
+              <div className="setting-group-title">Reading pane</div>
+              <SettingRow
+                label="Show reading pane"
+                desc="A second pane on the right opens the selected message inline."
+                on={previewOn} setOn={setPreviewOn}
+              />
+              <SettingRow
+                label="Show AI summary at the top of each thread"
+                desc="A short summary appears above long messages — never on threads under 80 words."
+                on={aiOn} setOn={setAiOn}
+              />
+            </div>
+          </React.Fragment>
+        )}
+
+        {section === 'inbox' && (
+          <React.Fragment>
+            <h2>Inbox</h2>
+            <p className="lead">How your incoming mail is sorted.</p>
+            <div className="setting-group">
+              <div className="setting-group-title">Triage</div>
+              <SettingRow label="Auto-archive read newsletters after 7 days"
+                desc="Newsletters tagged Reading are tucked away — never deleted."
+                on={autoArchive} setOn={setAutoArchive}/>
+              <SettingRow label="Bundle receipts &amp; recurring charges"
+                desc="Stripe, banks, and subscriptions get grouped into a single Finance digest."
+                on={true} setOn={() => {}}/>
+              <SettingRow label="Send-and-forget"
+                desc="Hide replies-to-self until someone else writes back."
+                on={false} setOn={() => {}}/>
+            </div>
+            <div className="setting-group">
+              <div className="setting-group-title">Reminders</div>
+              <SettingRow label="Nudge me about emails awaiting a reply"
+                desc="If a sent message hasn't had a response in 3 days, we'll surface it gently."
+                on={reminders} setOn={setReminders}/>
+            </div>
+          </React.Fragment>
+        )}
+
+        {section === 'ai' && (
+          <React.Fragment>
+            <h2>AI assistant</h2>
+            <p className="lead">A quiet helper that stays out of the way until you ask.</p>
+            <div className="setting-group">
+              <div className="setting-group-title">Drafting</div>
+              <SettingRow label="Suggest replies"
+                desc="Three short reply options under every thread. You can edit them before sending."
+                on={true} setOn={() => {}}/>
+              <SettingRow label="Draft from a one-liner"
+                desc="Type a sentence in compose and we'll expand it into a full message."
+                on={true} setOn={() => {}}/>
+            </div>
+            <div className="setting-group">
+              <div className="setting-group-title">Understanding</div>
+              <SettingRow label="Summaries on long threads"
+                desc="A 2-sentence summary for any thread over 4 messages or 500 words."
+                on={true} setOn={() => {}}/>
+              <SettingRow label="Extract tasks &amp; dates"
+                desc="Spot deadlines, meetings, and to-dos. Send them to your calendar or task list."
+                on={false} setOn={() => {}}/>
+            </div>
+          </React.Fragment>
+        )}
+
+        {section === 'account' && (
+          <React.Fragment>
+            <h2>Account</h2>
+            <p className="lead">Your CloudMail address and connected services.</p>
+            <div className="setting-row">
+              <Avatar name="Alex Hartley" size={48} radius={14}/>
+              <div className="meta">
+                <div className="label">Alex Hartley</div>
+                <div className="desc">alex@cloudmail.app · CloudMail Plus</div>
+              </div>
+              <button className="btn btn-ghost">Edit profile</button>
+            </div>
+            <div className="setting-group" style={{marginTop: 28}}>
+              <div className="setting-group-title">Connected accounts</div>
+              <div className="setting-row">
+                <div style={{width: 36, height: 36, borderRadius: 10, background: '#FBF8F2', display: 'grid', placeItems: 'center', border: '1px solid var(--line)'}}>
+                  <Icon name="calendar" size={18}/>
+                </div>
+                <div className="meta"><div className="label">Calendar</div><div className="desc">2 calendars connected</div></div>
+                <button className="btn btn-ghost">Manage</button>
+              </div>
+              <div className="setting-row">
+                <div style={{width: 36, height: 36, borderRadius: 10, background: '#FBF8F2', display: 'grid', placeItems: 'center', border: '1px solid var(--line)'}}>
+                  <Icon name="users" size={18}/>
+                </div>
+                <div className="meta"><div className="label">Contacts</div><div className="desc">Synced from iCloud</div></div>
+                <button className="btn btn-ghost">Manage</button>
+              </div>
+            </div>
+          </React.Fragment>
+        )}
+
+        {(section === 'compose' || section === 'notifs' || section === 'privacy' || section === 'aliases') && (
+          <React.Fragment>
+            <h2 style={{textTransform: 'capitalize'}}>{sections.find(s => s.id === section).label}</h2>
+            <p className="lead">Settings for this section.</p>
+            <div className="setting-row" style={{justifyContent: 'center', padding: 40}}>
+              <div style={{textAlign: 'center', color: 'var(--ink-3)'}}>
+                <Icon name={sections.find(s => s.id === section).icon} size={28}/>
+                <div style={{marginTop: 8, fontSize: 13}}>Settings for this section live here.</div>
+              </div>
+            </div>
+          </React.Fragment>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function SettingRow({ label, desc, on, setOn }) {
+  return (
+    <div className="setting-row">
+      <div className="meta">
+        <div className="label" dangerouslySetInnerHTML={{__html: label}}></div>
+        <div className="desc" dangerouslySetInnerHTML={{__html: desc}}></div>
+      </div>
+      <div className={`toggle ${on ? 'on' : ''}`} onClick={() => setOn(!on)}></div>
+    </div>
+  );
+}
+window.Settings = Settings;
+</script>
+<script type="text/babel">
+/* global React, Icon */
+
+function Login({ onEnter }) {
+  const [email, setEmail] = React.useState('alex@cloudmail.app');
+  const [password, setPassword] = React.useState('•••••••••••');
+
+  return (
+    <div className="login">
+      <div className="login-art">
+        <div className="cloud-deco" style={{ width: 180, height: 60, top: 80, left: -40 }}></div>
+        <div className="cloud-deco" style={{ width: 120, height: 40, top: 200, right: 60, opacity: 0.45 }}></div>
+        <div className="cloud-deco" style={{ width: 200, height: 70, bottom: 140, right: -40 }}></div>
+        <div className="cloud-deco" style={{ width: 90, height: 32, top: 320, left: 80, opacity: 0.5 }}></div>
+
+        <div className="login-art-brand">
+          <div className="brand-mark"></div>
+          <div className="brand-name">Cloud<em>mail</em></div>
+        </div>
+
+        <div className="login-art-quote">
+          <h1>Email <em>that lets you</em> breathe.</h1>
+          <p>CloudMail is a calmer inbox — soft on the eyes, sharp on the things that matter, and quiet about the rest.</p>
+        </div>
+
+        <div style={{ display: 'flex', gap: 24, fontSize: 13, color: 'var(--ink-2)', zIndex: 2 }}>
+          <span>15 GB free</span>
+          <span>·</span>
+          <span>End-to-end encrypted</span>
+          <span>·</span>
+          <span>No tracking, ever</span>
+        </div>
+      </div>
+
+      <div className="login-form">
+        <div className="login-form-inner">
+          <h2>Welcome back.</h2>
+          <p className="sub">Sign in to your CloudMail account.</p>
+
+          <input className="login-input" placeholder="you@cloudmail.app" value={email} onChange={e => setEmail(e.target.value)}/>
+          <input className="login-input" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)}/>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginTop: 6 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--ink-2)', cursor: 'pointer' }}>
+              <span style={{ width: 16, height: 16, borderRadius: 5, background: 'var(--accent)', display: 'grid', placeItems: 'center', color: 'white' }}>
+                <Icon name="check" size={11} stroke={3}/>
+              </span>
+              Keep me signed in
+            </label>
+            <a style={{ color: 'var(--accent)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }} href="#">Forgot?</a>
+          </div>
+
+          <button className="btn btn-primary" onClick={onEnter}>
+            Sign in
+            <Icon name="arrow-right" size={15}/>
+          </button>
+
+          <div className="login-divider">or continue with</div>
+
+          <div className="social-row">
+            <button className="social-btn">
+              <span style={{ width: 16, height: 16, borderRadius: 4, background: 'linear-gradient(135deg,#EA4335,#FBBC04,#34A853,#4285F4)' }}></span>
+              Google
+            </button>
+            <button className="social-btn">
+              <span style={{ width: 16, height: 16, borderRadius: 4, background: '#000' }}></span>
+              Apple
+            </button>
+          </div>
+
+          <div className="foot">
+            New to CloudMail? <a href="#" onClick={onEnter}>Create an account</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+window.Login = Login;
+</script>
+<script type="text/babel">
+/* global React, ReactDOM, Sidebar, InboxList, Reader, Compose, SearchOverlay, Settings, Login */
+const { useState, useEffect } = React;
+const { TweaksPanel, TweakSection, TweakRadio, TweakToggle } = window;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "showSwitcher": true
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
+
+  const [authed, setAuthed] = useState(true);
+  const [view, setView] = useState('inbox');
+  const [folder, setFolder] = useState('inbox');
+  const [filter, setFilter] = useState('all');
+  const [selectedId, setSelectedId] = useState(null);
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const theme = tweaks.theme;
+    let resolved = theme;
+    if (theme === 'auto') {
+      resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', resolved);
+  }, [tweaks.theme]);
+
+  useEffect(() => {
+    const h = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault(); setSearchOpen(s => !s);
+      } else if (e.key === 'c' && !composeOpen && !searchOpen && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+        setComposeOpen(true);
+      } else if (e.key === 'Escape') {
+        if (composeOpen) setComposeOpen(false);
+      }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [composeOpen, searchOpen]);
+
+  const emails = window.EMAILS;
+  const selected = emails.find(e => e.id === selectedId);
+
+  const screenLabel =
+    view === 'login' ? '05 Sign in' :
+    view === 'settings' ? '04 Settings' :
+    composeOpen ? '02 Compose' :
+    searchOpen ? '03 Search' : '01 Inbox';
+
+  return (
+    <React.Fragment>
+    {view === 'login' ? (
+      <div data-screen-label={screenLabel}><Login onEnter={() => setView('inbox')}/></div>
+    ) : (
+    <div className="app" data-screen-label={screenLabel}>
+      <Sidebar
+        currentFolder={folder}
+        onFolderChange={setFolder}
+        onCompose={() => setComposeOpen(true)}
+        onView={setView}
+        currentView={view}
+      />
+
+      {view === 'inbox' && (
+        <div className={`main ${selected ? 'main-reader' : 'main-list'}`}>
+          {!selected && (
+            <InboxList
+              emails={emails}
+              selectedId={selectedId}
+              wide={true}
+              onSelect={(id) => {
+                setSelectedId(id);
+                const e = window.EMAILS.find(e => e.id === id);
+                if (e) e.unread = false;
+              }}
+              filter={filter}
+              setFilter={setFilter}
+              onOpenSearch={() => setSearchOpen(true)}
+            />
+          )}
+          {selected && (
+            <Reader
+              email={selected}
+              onClose={() => setSelectedId(null)}
+              onArchive={() => setSelectedId(null)}
+            />
+          )}
+        </div>
+      )}
+
+      {view === 'settings' && (
+        <Settings theme={tweaks.theme} onThemeChange={(v) => setTweak('theme', v)}/>
+      )}
+
+      {composeOpen && <Compose onClose={() => setComposeOpen(false)}/>}
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onSelect={setSelectedId}/>}
+    </div>
+    )}
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Theme">
+          <TweakRadio
+            value={tweaks.theme}
+            onChange={(v) => setTweak('theme', v)}
+            options={[
+              { value: 'light', label: 'Light' },
+              { value: 'dark',  label: 'Dark' },
+              { value: 'auto',  label: 'Auto' },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="View">
+          <TweakToggle
+            label="Show screen switcher"
+            value={tweaks.showSwitcher}
+            onChange={(v) => setTweak('showSwitcher', v)}
+          />
+        </TweakSection>
+      </TweaksPanel>
+
+      {tweaks.showSwitcher && <div className="viewport-switcher">
+        <button className={view === 'inbox' && !composeOpen && !searchOpen ? 'active' : ''}
+                onClick={() => { setView('inbox'); setComposeOpen(false); setSearchOpen(false); }}>Inbox</button>
+        <button className={composeOpen ? 'active' : ''}
+                onClick={() => { setView('inbox'); setComposeOpen(true); setSearchOpen(false); }}>Compose</button>
+        <button className={searchOpen ? 'active' : ''}
+                onClick={() => { setView('inbox'); setSearchOpen(true); setComposeOpen(false); }}>Search</button>
+        <button className={view === 'settings' ? 'active' : ''}
+                onClick={() => { setView('settings'); setComposeOpen(false); setSearchOpen(false); }}>Settings</button>
+        <button className={view === 'login' ? 'active' : ''}
+                onClick={() => { setView('login'); setComposeOpen(false); setSearchOpen(false); }}>Sign in</button>
+      </div>}
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

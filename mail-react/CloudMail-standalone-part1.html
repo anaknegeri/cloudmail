@@ -1,0 +1,1777 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=1280"/>
+  <title>CloudMail — soft, friendly email</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+/* ------------------------------------------------------------
+   CloudMail — soft, friendly consumer email app
+   ------------------------------------------------------------ */
+
+:root {
+  /* Light theme (default) */
+  --bg: #F5F1EA;
+  --bg-2: #EFEAE1;
+  --surface: #FFFFFF;
+  --surface-2: #FBF8F2;
+  --surface-3: #F1EDE4;
+  --ink: #2A2520;
+  --ink-2: #5A5046;
+  --ink-3: #8A8077;
+  --ink-4: #B8AFA4;
+  --line: rgba(42, 37, 32, 0.08);
+  --line-2: rgba(42, 37, 32, 0.04);
+  --accent: #5E8FB8;     /* soft sky blue */
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E4EDF5;
+  --accent-soft-2: #D2E0EE;
+  --peach: #E8B89A;
+  --peach-soft: #FAEFE5;
+  --sage: #A8C0A4;
+  --sage-soft: #ECF1EA;
+  --lavender: #B8A8C8;
+  --lavender-soft: #EFEAF4;
+  --rose: #D89AAA;
+  --rose-soft: #F6E6EA;
+  --sunshine: #E8D49A;
+  --shadow-1: 0 1px 2px rgba(42, 37, 32, 0.04), 0 1px 1px rgba(42, 37, 32, 0.02);
+  --shadow-2: 0 4px 16px rgba(42, 37, 32, 0.06), 0 1px 2px rgba(42, 37, 32, 0.03);
+  --shadow-3: 0 16px 40px rgba(42, 37, 32, 0.12), 0 4px 8px rgba(42, 37, 32, 0.04);
+  --shadow-pop: 0 24px 60px rgba(42, 37, 32, 0.18);
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+}
+
+[data-theme="dark"] {
+  --bg: #18161A;
+  --bg-2: #1F1D22;
+  --surface: #25232A;
+  --surface-2: #2D2A33;
+  --surface-3: #34313A;
+  --ink: #F2EDE5;
+  --ink-2: #BDB6AC;
+  --ink-3: #8A8278;
+  --ink-4: #5A5249;
+  --line: rgba(242, 237, 229, 0.08);
+  --line-2: rgba(242, 237, 229, 0.04);
+  --accent: #88B4DC;
+  --accent-ink: #18161A;
+  --accent-soft: #2E3A48;
+  --accent-soft-2: #3A4A5C;
+  --peach: #E8B89A;
+  --peach-soft: #3E2E25;
+  --sage: #A8C0A4;
+  --sage-soft: #2A3329;
+  --lavender: #B8A8C8;
+  --lavender-soft: #322A3A;
+  --rose: #D89AAA;
+  --rose-soft: #3A2A2F;
+  --sunshine: #E8D49A;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-pop: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+#root {
+  height: 100%;
+}
+
+.serif {
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+input, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--ink-4);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-4);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* ------------------------------------------------------------
+   App shell
+   ------------------------------------------------------------ */
+.app {
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg);
+  padding: 12px;
+  gap: 12px;
+}
+
+/* ------------------------------------------------------------
+   Sidebar
+   ------------------------------------------------------------ */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  padding: 8px 4px;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 18px;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--lavender) 100%);
+  display: grid;
+  place-items: center;
+  position: relative;
+  box-shadow: var(--shadow-1);
+}
+
+.brand-mark::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 12px;
+  background: white;
+  border-radius: 999px;
+  box-shadow: -6px 2px 0 -2px white, 7px 1px 0 -3px white;
+}
+
+.brand-name {
+  font-family: 'Newsreader', serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.brand-name em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.compose-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin: 0 4px 14px;
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-1);
+}
+.compose-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2);
+}
+.compose-btn:active { transform: translateY(0); }
+[data-theme="dark"] .compose-btn { background: var(--ink); color: var(--bg); }
+
+.compose-btn .compose-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: var(--accent);
+  display: grid;
+  place-items: center;
+  color: white;
+}
+
+.sidebar-section {
+  padding: 12px 16px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  margin: 0 4px;
+  border-radius: 10px;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  position: relative;
+}
+.nav-item:hover {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+.nav-item.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
+.nav-item .nav-icon {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+.nav-item.active .nav-icon { color: var(--accent); }
+.nav-item .nav-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.nav-item .nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-left: auto;
+}
+
+.label-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.weather-card {
+  margin: 18px 4px 4px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--peach-soft) 100%);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+[data-theme="dark"] .weather-card {
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--surface-2) 100%);
+}
+
+.weather-icon {
+  width: 36px;
+  height: 28px;
+  position: relative;
+}
+.weather-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: white;
+  border-radius: 999px;
+  box-shadow: -10px 4px 0 -4px white, 12px 2px 0 -6px white, 16px 6px 0 -8px white;
+}
+[data-theme="dark"] .weather-icon::before {
+  background: var(--ink-2);
+  box-shadow: -10px 4px 0 -4px var(--ink-2), 12px 2px 0 -6px var(--ink-2), 16px 6px 0 -8px var(--ink-2);
+}
+
+.weather-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.weather-meta .temp {
+  font-family: 'Newsreader', serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+.weather-meta .label {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.user-chip {
+  margin-top: auto;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.user-chip:hover { background: var(--surface-3); }
+.user-chip .meta { flex: 1; min-width: 0; }
+.user-chip .name { font-weight: 600; font-size: 13px; }
+.user-chip .email { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ------------------------------------------------------------
+   Main content — split into list + reading pane
+   ------------------------------------------------------------ */
+.main {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.main.main-list,
+.main.main-reader {
+  grid-template-columns: 1fr;
+}
+
+/* Full-width inbox list: constrain content to a comfortable width */
+.main-list .list-header,
+.main-list .filter-chips {
+  max-width: 1080px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+.main-list .list-scroll {
+  padding: 4px 24px 24px;
+}
+.main-list .list-scroll > .email-group {
+  max-width: 1080px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.main-list .list-title { font-size: 32px; }
+.main-list .email-row {
+  grid-template-columns: 44px 220px 1fr auto;
+  padding: 14px 18px;
+  gap: 14px;
+  align-items: center;
+}
+.main-list .email-row .avatar { width: 44px; height: 44px; border-radius: 14px; font-size: 14px; }
+.main-list .email-row .email-from-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.main-list .email-row .email-from-col .email-from { font-size: 14px; }
+.main-list .email-row .email-from-col .email-handle { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.main-list .email-row .email-body { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.main-list .email-row .email-subject {
+  font-weight: 600;
+  font-size: 13.5px;
+  flex-shrink: 0;
+  max-width: 340px;
+}
+.main-list .email-row .email-preview {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.main-list .email-row .email-tags { margin-top: 0; flex-shrink: 0; }
+.main-list .email-row .email-meta { flex-direction: row; gap: 12px; align-items: center; }
+.main-list .email-row .email-meta .time { font-size: 12.5px; }
+
+.panel {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* List panel */
+.list-panel { min-width: 0; }
+
+.list-header {
+  padding: 18px 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.list-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.list-title {
+  font-family: 'Newsreader', serif;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.list-count {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--surface-3);
+  border-radius: 12px;
+  color: var(--ink-3);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.search-box:hover { background: var(--bg-2); }
+.search-box .kbd {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 2px 6px;
+  background: var(--surface);
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  color: var(--ink-3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.filter-chips {
+  display: flex;
+  gap: 6px;
+  padding: 4px 20px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filter-chips::-webkit-scrollbar { display: none; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--surface-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.chip:hover { background: var(--bg-2); }
+.chip.active {
+  background: var(--ink);
+  color: var(--surface);
+}
+[data-theme="dark"] .chip.active { background: var(--ink); color: var(--bg); }
+.chip .chip-count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+.list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px 12px;
+}
+
+.email-group {
+  margin-top: 12px;
+}
+.email-group-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 8px 14px 6px;
+}
+
+.email-row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.12s ease;
+}
+.email-row:hover { background: var(--surface-3); }
+.email-row.active {
+  background: var(--accent-soft);
+}
+.email-row.unread::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 13px;
+  color: white;
+  flex-shrink: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.email-body { min-width: 0; }
+.email-row-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.email-from {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.email-row.unread .email-from { font-weight: 700; }
+.email-subject {
+  font-size: 13px;
+  color: var(--ink);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+.email-row.unread .email-subject { font-weight: 600; }
+.email-preview {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.email-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.email-meta .time { font-variant-numeric: tabular-nums; }
+.email-row.unread .email-meta .time { color: var(--accent); font-weight: 600; }
+
+.email-tags {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.attach-icon {
+  width: 12px;
+  height: 12px;
+  opacity: 0.6;
+}
+
+/* ------------------------------------------------------------
+   Reader pane
+   ------------------------------------------------------------ */
+.reader-panel { min-width: 0; }
+
+.reader-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--ink-2);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.icon-btn:hover { background: var(--surface-3); color: var(--ink); }
+.icon-btn.danger:hover { background: var(--rose-soft); color: #C46A7E; }
+
+.toolbar-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--line);
+  margin: 0 6px;
+}
+
+.toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+
+.reader-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.reader-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 40px 80px;
+}
+
+.reader-subject {
+  font-family: 'Newsreader', serif;
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 18px;
+}
+
+.reader-labels {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.reader-sender {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0 18px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+.reader-sender .avatar { width: 44px; height: 44px; border-radius: 14px; font-size: 15px; }
+.reader-sender-meta { flex: 1; }
+.reader-sender-meta .from {
+  font-weight: 600;
+  font-size: 15px;
+}
+.reader-sender-meta .from-email {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.reader-sender-meta .to {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.reader-sender-time {
+  font-size: 13px;
+  color: var(--ink-3);
+  text-align: right;
+}
+
+.reader-summary {
+  background: linear-gradient(135deg, var(--lavender-soft) 0%, var(--accent-soft) 100%);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 28px;
+  position: relative;
+}
+.reader-summary .summary-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lavender);
+  margin-bottom: 8px;
+}
+[data-theme="dark"] .reader-summary .summary-label { color: #C8B8D8; }
+.reader-summary .summary-text {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.reader-summary .summary-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.summary-action {
+  padding: 5px 10px;
+  background: var(--surface);
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.summary-action:hover { background: var(--surface-3); }
+
+.reader-body {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink);
+}
+.reader-body p { margin: 0 0 16px; }
+.reader-body a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.reader-body .sig {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+
+.attachment-row {
+  display: flex;
+  gap: 10px;
+  margin: 28px 0;
+  flex-wrap: wrap;
+}
+.attachment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 10px 10px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  min-width: 200px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.attachment:hover { background: var(--surface-3); }
+.attachment-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 10px;
+  color: white;
+  flex-shrink: 0;
+}
+.attachment-meta { min-width: 0; }
+.attachment-name { font-weight: 600; font-size: 13px; }
+.attachment-size { font-size: 11.5px; color: var(--ink-3); }
+
+.quick-reply {
+  margin-top: 32px;
+  padding: 16px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+.quick-reply-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 10px;
+}
+.quick-reply-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.quick-reply-option {
+  padding: 8px 14px;
+  background: var(--surface);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+  border: 1px solid var(--line);
+  transition: all 0.15s ease;
+}
+.quick-reply-option:hover {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+.reply-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 16px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+}
+.reply-bar input {
+  flex: 1;
+  font-size: 14px;
+}
+.reply-send {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  display: grid;
+  place-items: center;
+}
+
+/* Empty state */
+.empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 40px;
+}
+.empty-inner {
+  text-align: center;
+  max-width: 380px;
+}
+.empty-illus {
+  width: 120px;
+  height: 90px;
+  margin: 0 auto 22px;
+  position: relative;
+}
+.empty-illus .cloud-1, .empty-illus .cloud-2, .empty-illus .cloud-3 {
+  position: absolute;
+  border-radius: 999px;
+}
+.empty-illus .cloud-1 {
+  width: 70px; height: 26px;
+  left: 25px; top: 32px;
+  background: var(--accent-soft);
+}
+.empty-illus .cloud-1::before, .empty-illus .cloud-1::after {
+  content: ''; position: absolute; background: inherit; border-radius: 50%;
+}
+.empty-illus .cloud-1::before { width: 28px; height: 28px; left: 10px; top: -14px; }
+.empty-illus .cloud-1::after { width: 22px; height: 22px; left: 36px; top: -16px; }
+.empty-illus .cloud-2 {
+  width: 50px; height: 18px;
+  left: 8px; top: 64px;
+  background: var(--peach-soft);
+}
+.empty-illus .cloud-3 {
+  width: 36px; height: 14px;
+  right: 14px; top: 12px;
+  background: var(--sage-soft);
+}
+.empty-title {
+  font-family: 'Newsreader', serif;
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.empty-sub {
+  font-size: 13.5px;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------
+   Compose drawer
+   ------------------------------------------------------------ */
+.compose-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(20, 16, 12, 0.3);
+  backdrop-filter: blur(8px);
+  z-index: 50;
+  display: grid;
+  place-items: end center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.compose-window {
+  width: min(720px, calc(100vw - 40px));
+  max-height: calc(100vh - 40px);
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-pop);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
+  margin-bottom: 0;
+}
+
+.compose-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.compose-title {
+  font-family: 'Newsreader', serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+.compose-actions { margin-left: auto; display: flex; gap: 4px; }
+
+.compose-field {
+  display: flex;
+  align-items: center;
+  padding: 11px 22px;
+  border-bottom: 1px solid var(--line-2);
+  gap: 12px;
+}
+.compose-field label {
+  width: 56px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.compose-field input {
+  flex: 1;
+  font-size: 14px;
+}
+.recipient-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 4px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.recipient-chip .avatar { width: 20px; height: 20px; border-radius: 999px; font-size: 9px; }
+.recipient-chip .remove { font-size: 14px; color: var(--ink-3); cursor: pointer; padding: 0 4px; }
+
+.compose-body {
+  flex: 1;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  overflow-y: auto;
+}
+.compose-body textarea {
+  flex: 1;
+  resize: none;
+  font-size: 14.5px;
+  line-height: 1.6;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.compose-ai-suggest {
+  background: var(--lavender-soft);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-2);
+}
+.compose-ai-suggest .ai-dot {
+  width: 18px; height: 18px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--lavender), var(--accent));
+  flex-shrink: 0;
+  display: grid; place-items: center;
+  color: white;
+  font-size: 10px;
+}
+
+.compose-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--surface);
+  padding: 9px 20px;
+}
+[data-theme="dark"] .btn-primary { background: var(--ink); color: var(--bg); }
+.btn-primary:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.btn-ghost { color: var(--ink-2); }
+.btn-ghost:hover { background: var(--surface-3); color: var(--ink); }
+.btn-accent {
+  background: var(--accent);
+  color: white;
+}
+.btn-accent:hover { filter: brightness(1.05); }
+
+/* ------------------------------------------------------------
+   Search overlay
+   ------------------------------------------------------------ */
+.search-overlay {
+  position: fixed; inset: 0;
+  background: rgba(20, 16, 12, 0.35);
+  backdrop-filter: blur(8px);
+  z-index: 60;
+  display: grid;
+  place-items: start center;
+  padding-top: 12vh;
+  animation: fadeIn 0.18s ease;
+}
+.search-modal {
+  width: min(640px, calc(100vw - 40px));
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+  animation: slideUp 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.search-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--line);
+}
+.search-input-row input {
+  flex: 1;
+  font-size: 16px;
+  font-family: 'Newsreader', serif;
+}
+.search-filters {
+  display: flex;
+  gap: 6px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.search-section {
+  padding: 6px 18px 14px;
+}
+.search-section-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 10px 6px 4px;
+}
+.search-result {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.search-result:hover, .search-result.selected { background: var(--surface-3); }
+.search-result .avatar { width: 32px; height: 32px; border-radius: 10px; font-size: 11px; }
+.search-result-text { min-width: 0; }
+.search-result-subject {
+  font-size: 13.5px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.search-result-preview {
+  font-size: 12px; color: var(--ink-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.search-result mark {
+  background: var(--sunshine);
+  color: var(--ink);
+  padding: 0 2px;
+  border-radius: 3px;
+}
+.search-result-time { font-size: 11.5px; color: var(--ink-3); align-self: center; }
+
+.search-footer {
+  padding: 10px 18px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.search-footer .kbd {
+  font-size: 10.5px;
+  padding: 1px 5px;
+  background: var(--surface);
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  font-family: 'JetBrains Mono', monospace;
+  margin-right: 4px;
+}
+
+/* ------------------------------------------------------------
+   Settings
+   ------------------------------------------------------------ */
+.settings {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 12px;
+  min-width: 0;
+}
+.settings-nav {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: var(--shadow-1);
+}
+.settings-nav-title {
+  font-family: 'Newsreader', serif;
+  font-size: 22px;
+  font-weight: 500;
+  padding: 8px 12px 14px;
+}
+.settings-nav .nav-item { margin: 0; }
+
+.settings-content {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 32px 40px;
+  overflow-y: auto;
+}
+.settings-content h2 {
+  font-family: 'Newsreader', serif;
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+.settings-content .lead {
+  color: var(--ink-3);
+  font-size: 14px;
+  margin: 0 0 28px;
+}
+
+.setting-group {
+  margin-bottom: 32px;
+}
+.setting-group-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  margin-bottom: 6px;
+  gap: 16px;
+}
+.setting-row + .setting-row { margin-top: 0; }
+.setting-row .meta { flex: 1; }
+.setting-row .label { font-weight: 600; font-size: 14px; }
+.setting-row .desc { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+
+/* Toggle */
+.toggle {
+  width: 38px; height: 22px;
+  background: var(--surface-3);
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 18px; height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.toggle.on { background: var(--accent); }
+.toggle.on::after { transform: translateX(16px); }
+[data-theme="dark"] .toggle::after { background: var(--ink); }
+
+.theme-swatch-row {
+  display: flex; gap: 10px;
+  padding: 14px 18px;
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+.theme-swatch {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600; font-size: 13px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  display: flex; align-items: center; gap: 8px;
+}
+.theme-swatch.active { border-color: var(--accent); }
+.theme-swatch .swatch-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 1px solid var(--line);
+}
+
+/* ------------------------------------------------------------
+   Login / Onboarding
+   ------------------------------------------------------------ */
+.login {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg);
+}
+.login-art {
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--peach-soft) 50%, var(--lavender-soft) 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px;
+}
+[data-theme="dark"] .login-art {
+  background: linear-gradient(135deg, #2A3848 0%, #2A2532 50%, #1F2436 100%);
+}
+
+.login-art-brand {
+  display: flex; align-items: center; gap: 10px;
+  z-index: 2;
+}
+.login-art-brand .brand-name { color: var(--ink); font-size: 26px; }
+
+.login-art-quote {
+  z-index: 2;
+  max-width: 440px;
+}
+.login-art-quote h1 {
+  font-family: 'Newsreader', serif;
+  font-size: 56px;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin: 0 0 18px;
+  color: var(--ink);
+}
+.login-art-quote h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+.login-art-quote p {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.cloud-deco {
+  position: absolute;
+  background: white;
+  border-radius: 999px;
+  opacity: 0.6;
+  z-index: 1;
+}
+[data-theme="dark"] .cloud-deco { background: rgba(255,255,255,0.06); }
+
+.login-form {
+  display: grid;
+  place-items: center;
+  padding: 40px;
+}
+.login-form-inner {
+  width: 100%;
+  max-width: 380px;
+}
+.login-form h2 {
+  font-family: 'Newsreader', serif;
+  font-size: 36px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+.login-form .sub {
+  color: var(--ink-3);
+  font-size: 14.5px;
+  margin: 0 0 28px;
+}
+.login-input {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  font-size: 14.5px;
+  margin-bottom: 10px;
+  transition: border-color 0.15s ease;
+}
+.login-input:focus { border-color: var(--accent); }
+.login-form .btn-primary {
+  width: 100%;
+  justify-content: center;
+  padding: 14px;
+  font-size: 14.5px;
+  margin-top: 6px;
+}
+.login-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 22px 0;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+.login-divider::before, .login-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--line);
+}
+.social-row { display: flex; gap: 10px; margin-bottom: 22px; }
+.social-btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  font-weight: 600; font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.social-btn:hover { border-color: var(--ink-4); }
+.foot {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.foot a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+/* ------------------------------------------------------------
+   View switcher
+   ------------------------------------------------------------ */
+.viewport-switcher {
+  position: fixed;
+  bottom: 16px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 6px;
+  display: flex;
+  gap: 4px;
+  box-shadow: var(--shadow-3);
+  z-index: 40;
+  border: 1px solid var(--line);
+}
+.viewport-switcher button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  transition: all 0.15s ease;
+}
+.viewport-switcher button:hover { color: var(--ink); }
+.viewport-switcher button.active {
+  background: var(--ink);
+  color: var(--surface);
+}
+[data-theme="dark"] .viewport-switcher button.active { background: var(--ink); color: var(--bg); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+  <script>
+// Sample email data for CloudMail
+
+window.AVATAR_PALETTES = [
+  ['#F2A48F', '#D87856'], // peach
+  ['#9FC4EB', '#5E8FB8'], // sky
+  ['#C8B8E4', '#8A78B0'], // lavender
+  ['#B8D8B0', '#7AA078'], // sage
+  ['#E8C798', '#C09858'], // sunshine
+  ['#E8A8B8', '#B86A82'], // rose
+  ['#9EC8C8', '#5E9090'], // teal
+  ['#D8B8D8', '#A878A8'], // pink
+];
+
+window.colorForName = function colorForName(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+  return window.AVATAR_PALETTES[Math.abs(h) % window.AVATAR_PALETTES.length];
+};
+
+window.initials = function initials(name) {
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+window.LABELS = {
+  work:     { name: 'Work',     color: '#5E8FB8' },
+  personal: { name: 'Personal', color: '#E8B89A' },
+  travel:   { name: 'Travel',   color: '#A8C0A4' },
+  finance:  { name: 'Finance',  color: '#B8A8C8' },
+  reading:  { name: 'Reading',  color: '#D89AAA' },
+  shopping: { name: 'Shopping', color: '#E8D49A' },
+};
+
+window.EMAILS = [
+  {
+    id: 'e1',
+    from: 'Maya Okafor',
+    fromEmail: 'maya@northwindstudio.co',
+    subject: 'Re: Friday review — moodboards are ready',
+    preview: 'I added the third direction we talked about on Tuesday. Honestly, I think it might be my favourite — leaning into the warmer palette and—',
+    body: [
+      "Hey! Hope your week is going gently.",
+      "Quick update on the Friday review: I've finished the moodboards and added a third direction we talked about on Tuesday. Honestly, I think it might be my favourite — it leans into the warmer palette and feels much closer to where the founders wanted to land.",
+      "A few things I'd love your eyes on before we share with the wider team:",
+      "  • The display type pairing on direction C — does it feel too editorial?\n  • Tone of the launch copy on slide 9 (I've taken a swing at it)\n  • Whether direction A is too close to what they have now",
+      "I've attached the deck plus a couple of reference shots. Let me know if Friday at 10:30 still works — happy to push if you need more time.",
+    ],
+    sig: 'Maya\nDesign Lead, Northwind Studio',
+    time: '9:42',
+    date: 'today',
+    unread: true,
+    starred: true,
+    labels: ['work'],
+    folder: 'inbox',
+    attachments: [
+      { name: 'Friday-review-v4.pdf', size: '2.4 MB', kind: 'pdf', color: '#D87856' },
+      { name: 'reference-shots.zip', size: '18 MB', kind: 'zip', color: '#8A78B0' },
+    ],
+    summary: 'Maya finished the Friday review moodboards and added a 3rd direction. She wants your feedback on the display type pairing, launch copy on slide 9, and whether direction A is too similar to the existing brand.',
+    quickReplies: ['Looks great — let\'s ship', 'Can we push to next week?', 'Will review tonight'],
+  },
+  {
+    id: 'e2',
+    from: 'Headspace',
+    fromEmail: 'hello@headspace.com',
+    subject: 'Your weekly mindfulness recap, Alex',
+    preview: 'You meditated 4 days this week — a small win worth celebrating. Here is a look at your patterns and a gentle suggestion for next week.',
+    body: [
+      "Hi Alex,",
+      "You meditated 4 days this week — a small win worth celebrating. Most of those sessions happened in the morning, which seems to be when you feel most consistent.",
+      "Your most-played session: 'Letting Go of Tension' (3 plays).",
+      "A gentle suggestion: try a 5-minute wind-down before bed twice this week. Short sessions stick.",
+    ],
+    sig: 'Take care,\nThe Headspace team',
+    time: '8:15',
+    date: 'today',
+    unread: true,
+    starred: false,
+    labels: ['personal'],
+    folder: 'inbox',
+    attachments: [],
+    summary: 'Weekly mindfulness recap: 4 sessions this week, mostly mornings. Top session was "Letting Go of Tension". They suggest trying short wind-down sessions before bed.',
+    quickReplies: [],
+  },
+  {
+    id: 'e3',
+    from: 'Theo Lindqvist',
+    fromEmail: 'theo@brewstack.com',
+    subject: 'coffee tomorrow? ☕',
+    preview: 'I\'m in your neighbourhood for a thing at 11 — any chance you\'re around for a quick cup after? No pressure if not, we\'ll catch up properly soon.',
+    body: [
+      "Hey hey,",
+      "I'm in your neighbourhood for a thing at 11 — any chance you're around for a quick cup after? No pressure if not, we'll catch up properly soon.",
+      "There's that new place by the canal everyone keeps talking about. Could be a good excuse.",
+    ],
+    sig: 'T',
+    time: '7:58',
+    date: 'today',
+    unread: true,
+    starred: false,
+    labels: ['personal'],
+    folder: 'inbox',
+    attachments: [],
+    summary: 'Theo is in your neighbourhood tomorrow at 11. Wants to grab coffee at the new place by the canal after.',
+    quickReplies: ['Yes, see you there!', 'Can\'t make it tomorrow', 'How about Thursday?'],
+  },
+  {
+    id: 'e4',
+    from: 'Linear',
+    fromEmail: 'no-reply@linear.app',
+    subject: '3 issues assigned to you this week',
+    preview: 'A quick summary of what is on your plate: CM-204 (in progress), CM-211 (todo, due Thursday), and CM-218 (backlog, no due date).',
+    body: [
+      "Here's what's on your plate this week:",
+      "  • CM-204 — Compose drawer auto-save (in progress)\n  • CM-211 — Search keyboard nav (todo, due Thursday)\n  • CM-218 — Sidebar collapse animation (backlog)",
+      "View all in Linear →",
+    ],
+    sig: '',
+    time: 'Yesterday',
+    date: 'yesterday',
+    unread: false,
+    starred: false,
+    labels: ['work'],
+    folder: 'inbox',
+    attachments: [],
+    summary: '3 Linear issues assigned: CM-204 in progress, CM-211 due Thursday, CM-218 in backlog.',
+    quickReplies: [],
+  },
+  {
+    id: 'e5',
+    from: 'Aer Lingus',
+    fromEmail: 'booking@aerlingus.com',
+    subject: 'Your trip to Lisbon — check-in opens in 24 hours',
+    preview: 'Online check-in for flight EI484 (Dublin → Lisbon, Sat 18 May) opens at 14:25 tomorrow. Seat selection, baggage, and your boarding pass will be here.',
+    body: [
+      "Hi Alex,",
+      "Your online check-in opens in 24 hours.",
+      "  Flight: EI484\n  Dublin (DUB) → Lisbon (LIS)\n  Saturday 18 May, departs 14:25",
+      "You'll be able to choose your seat, add baggage, and download your boarding pass.",
+    ],
+    sig: 'Safe travels,\nAer Lingus',
+    time: 'Yesterday',
+    date: 'yesterday',
+    unread: false,
+    starred: true,
+    labels: ['travel'],
+    folder: 'inbox',
+    attachments: [
+      { name: 'booking-EI484.pdf', size: '184 KB', kind: 'pdf', color: '#5E8FB8' },
+    ],
+    summary: 'Online check-in for your Dublin → Lisbon flight (EI484, Sat 18 May, 14:25) opens in 24 hours.',
+    quickReplies: [],
+  },
+  {
+    id: 'e6',
+    from: 'Substack — Anna Wu',
+    fromEmail: 'anna@substack.com',
+    subject: 'The case for slow tools',
+    preview: 'I\'ve been thinking about why some of the software I love most is the slowest. Not unresponsive — just unhurried. There is a difference.',
+    body: [
+      "I've been thinking about why some of the software I love most is the slowest. Not unresponsive — just unhurried. There is a difference.",
+      "The best slow tools refuse to fragment your attention. They have one job, they do it well, and they leave you alone the rest of the time...",
+      "(Continue reading on Substack)",
+    ],
+    sig: '— Anna',
+    time: 'Mon',
+    date: 'this week',
+    unread: false,
+    starred: false,
+    labels: ['reading'],
+    folder: 'inbox',
+    attachments: [],
+    summary: 'Anna Wu newsletter: a reflection on why some of the best software is intentionally unhurried, refusing to fragment attention.',
+    quickReplies: [],
+  },
+  {
+    id: 'e7',
+    from: 'Stripe',
+    fromEmail: 'receipts@stripe.com',
+    subject: 'Receipt from Figma — €18.00',
+    preview: 'Your monthly Figma subscription was charged to Visa •• 4421. View receipt, manage subscription, or contact support if anything looks off.',
+    body: [
+      "Receipt from Figma",
+      "Amount: €18.00\nDate: 12 May 2026\nCard: Visa ending 4421",
+      "View receipt →",
+    ],
+    sig: '',
+    time: 'Mon',
+    date: 'this week',
+    unread: false,
+    starred: false,
+    labels: ['finance'],
+    folder: 'inbox',
+    attachments: [],
+    summary: 'Monthly Figma subscription charged €18.00 to Visa ••4421.',
+    quickReplies: [],
+  },
+  {
+    id: 'e8',
+    from: 'Sara Beltrán',
+    fromEmail: 'sara.b@northwindstudio.co',
+    subject: 'Notes from the brand sync',
+    preview: 'Quick recap from this morning. The founders are leaning toward direction B but want to see what C could look like with the warmer palette before deciding.',
+    body: [
+      "Sharing my notes from the brand sync this morning while it's all fresh.",
+      "  • Founders leaning toward direction B\n  • Want to see C with the warmer palette before deciding\n  • Logo size on smaller surfaces is a concern\n  • Next review: Thursday 11:00",
+      "Let me know if I missed anything — I'll send the deck around tomorrow.",
+    ],
+    sig: 'Sara',
+    time: 'Sun',
+    date: 'this week',
+    unread: false,
+    starred: false,
+    labels: ['work'],
+    folder: 'inbox',
+    attachments: [],
+    summary: 'Sara\'s notes from the brand sync: founders leaning direction B, want to see C with warmer palette, concern about logo at small sizes. Next review Thursday 11:00.',
+    quickReplies: [],
+  },
+  {
+    id: 'e9',
+    from: 'Notion',
+    fromEmail: 'team@notion.so',
+    subject: 'What\'s new in Notion — Calendar, AI Q&A, and more',
+    preview: 'We\'re rolling out a redesigned calendar view, smarter AI Q&A across your entire workspace, and a handful of small refinements you\'ll feel right away.',
+    body: ["Lots of small refinements this month — full changelog inside."],
+    sig: '',
+    time: '9 May',
+    date: 'this week',
+    unread: false,
+    starred: false,
+    labels: ['reading'],
+    folder: 'inbox',
+    attachments: [],
+    summary: 'Notion product update: new calendar view, smarter AI Q&A across workspaces, plus small refinements.',
+    quickReplies: [],
+  },
+  {
+    id: 'e10',
+    from: 'Mum',
+    fromEmail: 'eleanor.h@gmail.com',
+    subject: 'photos from the weekend 🌷',
+    preview: 'Finally got around to sending these. The garden is in full bloom — your dad insists you have not seen it like this. Hope you are eating well!',
+    body: [
+      "Finally got around to sending these. The garden is in full bloom — your dad insists you haven't seen it like this. Hope you're eating well!",
+      "Call when you can, no rush.",
+    ],
+    sig: 'Love,\nMum xx',
+    time: '7 May',
+    date: 'this week',
+    unread: false,
+    starred: true,
+    labels: ['personal'],
+    folder: 'inbox',
+    attachments: [
+      { name: 'garden-may.zip', size: '46 MB', kind: 'zip', color: '#7AA078' },
+    ],
+    summary: 'Mum sent garden photos from the weekend. Wants you to call when you can.',
+    quickReplies: ['Calling tonight ❤️', 'These are beautiful', 'Thanks Mum, will call this weekend'],
+  },
+  {
+    id: 'e11',
+    from: 'Brewstack Weekly',
+    fromEmail: 'newsletter@brewstack.com',
+    subject: 'Issue 142 — the slow web, again',
+    preview: '12 links worth your time this week, plus a long read on why minimal feeds are quietly making a comeback. Reading time: ~8 minutes.',
+    body: ["12 links worth your time this week, plus a long read on minimal feeds."],
+    sig: '',
+    time: '5 May',
+    date: 'earlier',
+    unread: false,
+    starred: false,
+    labels: ['reading'],
+    folder: 'inbox',
+    attachments: [],
+    summary: 'Brewstack Weekly issue 142: 12 curated links and a long read about minimal feeds making a comeback. 8 min read.',
+    quickReplies: [],
+  },
+  {
+    id: 'e12',
+    from: 'Revolut',
+    fromEmail: 'no-reply@revolut.com',
+    subject: 'Your April spending recap',
+    preview: 'You spent €1,842 in April across 47 transactions. Top category: Groceries (€312). You stayed under budget in 4 of 6 categories — nice work.',
+    body: ["Your April spending recap is ready in the app."],
+    sig: '',
+    time: '3 May',
+    date: 'earlier',
+    unread: false,
+    starred: false,
+    labels: ['finance'],
+    folder: 'inbox',
+    attachments: [],
+    summary: 'April spending: €1,842 across 47 transactions. Top category Groceries (€312). Under budget in 4/6 categories.',
+    quickReplies: [],
+  },
+];
+
+window.FOLDERS = [
+  { id: 'inbox',    name: 'Inbox',    icon: 'inbox',   count: 8 },
+  { id: 'starred',  name: 'Starred',  icon: 'star',    count: 3 },
+  { id: 'snoozed',  name: 'Snoozed',  icon: 'moon',    count: 2 },
+  { id: 'sent',     name: 'Sent',     icon: 'send',    count: null },
+  { id: 'drafts',   name: 'Drafts',   icon: 'edit',    count: 1 },
+  { id: 'archive',  name: 'Archive',  icon: 'archive', count: null },
+  { id: 'spam',     name: 'Spam',     icon: 'shield',  count: null },
+  { id: 'trash',    name: 'Trash',    icon: 'trash',   count: null },
+];
+</script>
+<!-- PART 1 OF 2 — continued in CloudMail-standalone-part2.html -->
+</body>
+</html>
