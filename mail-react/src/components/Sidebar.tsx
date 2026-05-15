@@ -32,6 +32,14 @@ const MANAGE_NAV: { id: string; label: string; icon: string; perm: string }[] = 
   { id: 'sys-setting',  label: 'System Settings', icon: 'settings',    perm: 'setting:query' },
 ]
 
+// Labels section (placeholder - actual labels from API later)
+const LABELS_NAV: { id: string; label: string; color: string }[] = [
+  { id: 'label-work',     label: 'Work',     color: '#5E8FB8' },
+  { id: 'label-personal', label: 'Personal', color: '#E8B89A' },
+  { id: 'label-travel',   label: 'Travel',   color: '#A8C0A4' },
+  { id: 'label-finance',  label: 'Finance',  color: '#B8A8C8' },
+]
+
 export default function Sidebar({ onCompose, currentView, onView, accounts, onSwitchAccount }: SidebarProps) {
   const user = useUserStore(s => s.user)
   const perms = useUserStore(s => s.perms)
@@ -97,6 +105,24 @@ export default function Sidebar({ onCompose, currentView, onView, accounts, onSw
           </button>
         )
       })}
+
+      {/* Labels */}
+      <div className="px-4 pt-3 pb-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase" style={{ color: 'var(--ink-3)' }}>
+        Labels
+      </div>
+      {LABELS_NAV.map(item => (
+        <button
+          key={item.id}
+          onClick={() => onView(item.id)}
+          className={['flex items-center gap-3 py-2 px-3 mx-1 rounded-[10px] text-sm font-medium transition-all text-left', currentView === item.id ? 'shadow-1' : 'hover:bg-s3'].join(' ')}
+          style={navItemStyle(currentView === item.id)}
+        >
+          <span className="w-[18px] h-[18px] grid place-items-center flex-shrink-0" style={iconColor(currentView === item.id)}>
+            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: item.color }} />
+          </span>
+          <span className="flex-1">{item.label}</span>
+        </button>
+      ))}
 
       {/* Settings */}
       <button
