@@ -84,6 +84,9 @@ export default function Analysis() {
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<StatData | null>(null)
   const [days, setDays] = useState<DayData[]>([])
+  const [senders, setSenders] = useState<{name:string;total:number}[]>([])
+  const [userDays, setUserDays] = useState<{date:string;total:number}[]>([])
+  const [daySendTotal, setDaySendTotal] = useState(0)
 
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -91,20 +94,28 @@ export default function Analysis() {
     analysisEcharts(tz)
       .then(raw => {
         const data = raw as unknown as any
-        if (data) {
-          setStats({
-            receive: (data.receive ?? 0) + (data.receiveDelete ?? 0),
-            receiveDelete: data.receiveDelete ?? 0,
-            send: (data.send ?? 0) + (data.sendDelete ?? 0),
-            sendDelete: data.sendDelete ?? 0,
-            mailbox: (data.mailbox ?? 0) + (data.mailboxDelete ?? 0),
-            mailboxDelete: data.mailboxDelete ?? 0,
-            user: (data.user ?? 0) + (data.userDelete ?? 0),
-            userDelete: data.userDelete ?? 0,
-          })
-          if (Array.isArray(data.days)) setDays(data.days)
-          else if (Array.isArray(data.chart)) setDays(data.chart)
-        }
+        if (!data) return
+        const n = data.numberCount ?? {}
+        setStats({
+          receive:       n.receiveTotal       ?? 0,
+          receiveDelete: n.delReceiveTotal     ?? 0,
+          send:          n.sendTotal           ?? 0,
+          sendDelete:    n.delSendTotal        ?? 0,
+          mailbox:       n.accountTotal        ?? 0,
+          mailboxDelete: n.delAccountTotal     ?? 0,
+          user:          n.userTotal           ?? 0,
+          userDelete:    n.delUserTotal        ?? 0,
+        })
+        const receiveDays: {date:string;total:number}[] = data.emailDayCount?.receiveDayCount ?? []
+        const sendDays:    {date:string;total:number}[] = data.emailDayCount?.sendDayCount    ?? []
+        setDays(receiveDays.map((r, i) => ({
+          date:    r.date,
+          receive: r.total,
+          send:    sendDays[i]?.total ?? 0,
+        })))
+        setSenders(data.receiveRatio?.nameRatio ?? [])
+        setUserDays(data.userDayCount ?? [])
+        setDaySendTotal(data.daySendTotal ?? 0)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
@@ -143,7 +154,7 @@ export default function Analysis() {
         )}
       </div>
 
-      {/* Bar Chart */}
+      {/* Bar Chart - Email Activity */}
       {days.length > 0 && (
         <div className="rounded-lg p-5" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-1)' }}>
           <h2 className="font-serif text-base font-semibold mb-4" style={{ color: 'var(--ink)' }}>
@@ -152,6 +163,72 @@ export default function Analysis() {
           <BarChart days={days} />
         </div>
       )}
+
+      {/* Bottom row: Senders + User Growth + Today Sent */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+
+        {/* Email Sources */}
+        {senders.length > 0 && (
+          <div className="rounded-lg p-5" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-1)' }}>
+            <h2 className="font-serif text-base font-semibold mb-3" style={{ color: 'var(--ink)' }}>Email Sources</h2>
+            <div className="space-y-2">
+              {senders.map((s, i) => {
+                const total = senders.reduce((a, b) => a + b.total, 0) || 1
+                const pct = Math.round((s.total / total) * 100)
+                const colors = ['var(--accent)', '#13DEB9', '#FBBF24', '#FF7F50', '#C084FC']
+                return (
+                  <div key={i}>
+                    <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--ink-2)' }}>
+                      <span className="truncate max-w-[160px]">{s.name || '—'}</span>
+                      <span>{s.total} ({pct}%)</span>
+                    </div>
+                    <div className="rounded-full h-1.5" style={{ background: 'var(--line)' }}>
+                      <div className="rounded-full h-1.5" style={{ width: `${pct}%`, background: colors[i % colors.length] }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* User Growth */}
+        {userDays.length > 0 && (
+          <div className="rounded-lg p-5" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-1)' }}>
+            <h2 className="font-serif text-base font-semibold mb-3" style={{ color: 'var(--ink)' }}>User Growth</h2>
+            <div className="overflow-x-auto">
+              <svg width={Math.max(200, userDays.length * 20)} height={80} className="block">
+                {(() => {
+                  const maxV = Math.max(...userDays.map(d => d.total), 1)
+                  const w = Math.max(200, userDays.length * 20)
+                  const pts = userDays.map((d, i) => {
+                    const x = (i / (userDays.length - 1)) * w
+                    const y = 70 - (d.total / maxV) * 60
+                    return `${x},${y}`
+                  }).join(' ')
+                  return (
+                    <>
+                      <polyline points={pts} fill="none" stroke="var(--accent)" strokeWidth={2} />
+                      {userDays.map((d, i) => {
+                        const x = (i / (userDays.length - 1)) * w
+                        const y = 70 - (d.total / maxV) * 60
+                        return <circle key={i} cx={x} cy={y} r={3} fill="var(--accent)" />
+                      })}
+                    </>
+                  )
+                })()}
+              </svg>
+            </div>
+          </div>
+        )}
+
+        {/* Sent Today */}
+        <div className="rounded-lg p-5 flex flex-col items-center justify-center" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-1)' }}>
+          <h2 className="font-serif text-base font-semibold mb-2" style={{ color: 'var(--ink)' }}>Sent Today</h2>
+          <p className="text-5xl font-serif font-bold" style={{ color: 'var(--accent)' }}>{daySendTotal}</p>
+          <p className="text-xs mt-2" style={{ color: 'var(--ink-3)' }}>emails sent today</p>
+        </div>
+      </div>
 
       {!stats && !loading && (
         <div className="text-center py-12" style={{ color: 'var(--ink-3)' }}>No data available</div>
