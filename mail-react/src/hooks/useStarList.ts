@@ -12,8 +12,8 @@ export function useStarList() {
     setLoading(true)
     try {
       const lastEmailId = emails.length > 0 ? emails[emails.length - 1].emailId : undefined
-      const res = await starList(lastEmailId, 20)
-      const newEmails = Array.isArray(res) ? res : []
+      const res = await starList(lastEmailId, 20) as unknown as { list: ApiEmail[] } | ApiEmail[]
+      const newEmails = Array.isArray(res) ? res : (res?.list ?? [])
       if (newEmails.length === 0) {
         setHasMore(false)
       } else {
