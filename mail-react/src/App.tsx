@@ -83,8 +83,9 @@ function AppShell({ onLogout, loggedIn }: { onLogout: () => void; loggedIn: bool
   const [accounts, setAccounts] = useState<{ accountId: number; email: string; allReceive: number }[]>([])
 
   useEffect(() => {
+    if (!loggedIn) return
     accountList().then(res => {
-      const list = (res as unknown as { accountId: number; email: string; allReceive: number }[])
+      const list = Array.isArray(res) ? res : []
       setAccounts(list)
       if (list.length > 0 && !currentAccountId) {
         setAccount(list[0].accountId, list[0] as any)
