@@ -26,8 +26,14 @@ export default function Starred() {
   const setReplyEmail = useMailStore(s => s.setReplyEmail)
   const { emails, loading, hasMore, loadMore, refresh } = useStarList()
 
+  // Initial load and reset on refresh button click
+  const handleRefresh = async () => {
+    await refresh()
+    await loadMore()
+  }
+
   useEffect(() => {
-    loadMore()
+    handleRefresh()
   }, [])
 
   return (
@@ -40,7 +46,7 @@ export default function Starred() {
             Starred
           </h2>
           <button
-            onClick={refresh}
+            onClick={handleRefresh}
             className="p-2 rounded-lg hover:bg-s3 transition-colors"
             style={{ color: 'var(--ink-2)' }}
           >

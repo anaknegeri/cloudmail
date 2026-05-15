@@ -12,13 +12,14 @@ export interface UseEmailListParams {
 }
 
 export function useEmailList(params: UseEmailListParams = {}) {
-  const { accountId, allReceive = 0, type = 1 } = params
+  const { accountId, allReceive = 0, type = 0 } = params
   const [emails, setEmails]       = useState<ApiEmail[]>([])
   const [loading, setLoading]     = useState(false)
   const [firstLoad, setFirstLoad] = useState(true)
   const [hasMore, setHasMore]     = useState(true)
   const [total, setTotal]         = useState(0)
   const latestEmailRef            = useRef<ApiEmail | null>(null)
+  const refreshing                = useRef(false)
 
   const unreadCount = emails.filter(e => e.unread === 1).length
 
@@ -57,11 +58,13 @@ export function useEmailList(params: UseEmailListParams = {}) {
   }, [loading, hasMore, emails, accountId, allReceive, type])
 
   const refresh = useCallback(async () => {
+    refreshing.current = true
     setEmails([])
     setHasMore(true)
     setFirstLoad(true)
     setLoading(false)
     setTotal(0)
+    latestEmailRef.current = null
   }, [])
 
   const pollLatest = useCallback(async () => {
@@ -88,5 +91,5 @@ export function useEmailList(params: UseEmailListParams = {}) {
     }
   }, [accountId, allReceive])
 
-  return { emails, loading, firstLoad, hasMore, loadMore, refresh, pollLatest, setEmails, unreadCount, total }
+  return { emails, loading, firstLoad, hasMore, loadMore, refresh, pollLatest, setEmails, unreadCount, total, refreshing }
 }
