@@ -3,13 +3,16 @@ import { userList, userSetStatus, userDelete, userAdd, userSetPwd } from '../../
 import { roleSelectUse } from '../../request/role'
 
 interface User {
-  id: number
+  accountId: number
   email: string
-  receiveCount: number
-  sendCount: number
-  roleName: string
+  name: string
   status: number
-  createdAt: string
+  createTime: string
+  userId: number
+  allReceive: number
+  sort: number
+  isDel: number
+  latestEmailTime: string | null
 }
 
 interface Role { id: number; name: string }
@@ -118,7 +121,7 @@ export default function Users() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--line)', color: 'var(--ink-2)' }}>
-                {['Email', 'Received', 'Sent', 'Role', 'Status', 'Created', 'Actions'].map(h => (
+                {['Name / Email', 'Received', 'Sent', 'Role', 'Status', 'Created', 'Actions'].map(h => (
                   <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
                 ))}
               </tr>
@@ -127,33 +130,36 @@ export default function Users() {
               {users.map(u => {
                 const s = statusLabel[u.status] ?? { label: String(u.status), bg: '#f3f4f6', color: '#6b7280' }
                 return (
-                  <tr key={u.id} style={{ borderBottom: '1px solid var(--line)' }}>
-                    <td className="px-4 py-3 font-medium">{u.email}</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--ink-2)' }}>{u.receiveCount ?? 0}</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--ink-2)' }}>{u.sendCount ?? 0}</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--ink-2)' }}>{u.roleName}</td>
+                  <tr key={u.accountId} style={{ borderBottom: '1px solid var(--line)' }}>
+                    <td className="px-4 py-3">
+                      <div className="font-medium">{u.name}</div>
+                      <div className="text-xs" style={{ color: 'var(--ink-3)' }}>{u.email}</div>
+                    </td>
+                    <td className="px-4 py-3 text-center" style={{ color: 'var(--ink-2)' }}>{u.allReceive}</td>
+                    <td className="px-4 py-3 text-center" style={{ color: 'var(--ink-2)' }}>-</td>
+                    <td className="px-4 py-3" style={{ color: 'var(--ink-2)' }}>-</td>
                     <td className="px-4 py-3">
                       <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                         style={{ background: s.bg, color: s.color }}>{s.label}</span>
                     </td>
                     <td className="px-4 py-3" style={{ color: 'var(--ink-3)' }}>
-                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
+                      {u.createTime ? new Date(u.createTime).toLocaleDateString() : '—'}
                     </td>
                     <td className="px-4 py-3 relative">
-                      <button onClick={() => setOpenMenu(openMenu === u.id ? null : u.id)}
+                      <button onClick={() => setOpenMenu(openMenu === u.accountId ? null : u.accountId)}
                         className="text-xs px-2 py-1 rounded border"
                         style={{ borderColor: 'var(--line)', color: 'var(--ink-2)' }}>Actions ▾</button>
-                      {openMenu === u.id && (
+                      {openMenu === u.accountId && (
                         <div className="absolute right-4 z-10 mt-1 rounded-lg shadow-lg text-sm overflow-hidden"
                           style={{ background: 'var(--surface)', border: '1px solid var(--line)', minWidth: 140 }}>
-                          <button onClick={() => { setPwdModal({ id: u.id }); setOpenMenu(null) }}
+                          <button onClick={() => { setPwdModal({ id: u.userId }); setOpenMenu(null) }}
                             className="block w-full text-left px-3 py-2 hover:opacity-70">Set Password</button>
                           {u.status === 0
-                            ? <button onClick={() => handleStatus(u.id, 1)} className="block w-full text-left px-3 py-2 hover:opacity-70" style={{ color: '#dc2626' }}>Ban</button>
-                            : <button onClick={() => handleStatus(u.id, 0)} className="block w-full text-left px-3 py-2 hover:opacity-70" style={{ color: '#16a34a' }}>Unban</button>}
+                            ? <button onClick={() => handleStatus(u.userId, 1)} className="block w-full text-left px-3 py-2 hover:opacity-70" style={{ color: '#dc2626' }}>Ban</button>
+                            : <button onClick={() => handleStatus(u.userId, 0)} className="block w-full text-left px-3 py-2 hover:opacity-70" style={{ color: '#16a34a' }}>Unban</button>}
                           {u.status === -2
-                            ? <button onClick={() => handleRestore(u.id)} className="block w-full text-left px-3 py-2 hover:opacity-70">Restore</button>
-                            : <button onClick={() => handleDelete(u.id)} className="block w-full text-left px-3 py-2 hover:opacity-70" style={{ color: '#dc2626' }}>Delete</button>}
+                            ? <button onClick={() => handleRestore(u.userId)} className="block w-full text-left px-3 py-2 hover:opacity-70">Restore</button>
+                            : <button onClick={() => handleDelete(u.userId)} className="block w-full text-left px-3 py-2 hover:opacity-70" style={{ color: '#dc2626' }}>Delete</button>}
                         </div>
                       )}
                     </td>
