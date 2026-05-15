@@ -63,9 +63,9 @@ function Toast() {
 type View = 'inbox' | 'sent' | 'draft' | 'star' | 'settings' | string
 
 function emailTypeForView(v: View): number {
-  if (v === 'sent') return 2
-  if (v === 'draft') return 3
-  return 1
+  if (v === 'sent') return 1  // SEND
+  if (v === 'draft') return 3 // DRAFT (local only, not used in API)
+  return 0  // RECEIVE (inbox)
 }
 
 function AppShell({ onLogout, loggedIn }: { onLogout: () => void; loggedIn: boolean }) {

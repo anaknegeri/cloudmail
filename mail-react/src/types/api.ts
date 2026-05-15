@@ -21,7 +21,7 @@ export interface ApiEmail {
   inReplyTo: string
   relation: string
   messageId: string
-  type: number           // 1=receive, 2=send, 3=draft
+  type: number           // 0=receive, 1=send, 3=draft (draft is local only)
   status: number         // 0=received, 1=sent, 2=delivered, 3=bounced, 4=complained, 5=delayed, 7=noRecipient
   resendEmailId: string
   message: string | null
