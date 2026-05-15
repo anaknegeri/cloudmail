@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import type { ApiEmail } from '../types/api'
+import type { ApiEmail, ApiEmailListResponse } from '../types/api'
 import { emailList, emailLatest } from '../request/email'
 import { useSettingStore } from '../store/setting'
 
@@ -17,6 +17,7 @@ export function useEmailList(params: UseEmailListParams = {}) {
   const [loading, setLoading]     = useState(false)
   const [firstLoad, setFirstLoad] = useState(true)
   const [hasMore, setHasMore]     = useState(true)
+  const [total, setTotal]         = useState(0)
   const latestEmailRef            = useRef<ApiEmail | null>(null)
 
   const unreadCount = emails.filter(e => e.unread === 1).length
@@ -26,22 +27,25 @@ export function useEmailList(params: UseEmailListParams = {}) {
     setLoading(true)
     try {
       const lastEmail = emails[emails.length - 1]
-      const list = (await emailList(
+      const res = (await emailList(
         accountId,
         allReceive,
         lastEmail?.emailId,
         0,
         PAGE_SIZE,
         type,
-      ) as unknown) as ApiEmail[]
-      if (!list || list.length === 0) {
+      ) as unknown) as ApiEmailListResponse | null
+
+      if (!res || !res.list || res.list.length === 0) {
         setHasMore(false)
       } else {
+        const list = res.list
         setEmails(prev => {
           const merged = [...prev, ...list]
-          latestEmailRef.current = merged[0] ?? null
+          latestEmailRef.current = res.latestEmail ?? merged[0] ?? null
           return merged
         })
+        setTotal(res.total ?? 0)
         if (list.length < PAGE_SIZE) setHasMore(false)
       }
     } catch (e) {
@@ -57,6 +61,7 @@ export function useEmailList(params: UseEmailListParams = {}) {
     setHasMore(true)
     setFirstLoad(true)
     setLoading(false)
+    setTotal(0)
   }, [])
 
   const pollLatest = useCallback(async () => {
@@ -68,7 +73,7 @@ export function useEmailList(params: UseEmailListParams = {}) {
         latestEmailRef.current.emailId,
         accountId,
         allReceive,
-      ) as unknown) as ApiEmail[]
+      ) as unknown) as ApiEmail[] | null
       if (newList && newList.length > 0) {
         setEmails(prev => {
           const ids = new Set(prev.map(e => e.emailId))
@@ -83,5 +88,5 @@ export function useEmailList(params: UseEmailListParams = {}) {
     }
   }, [accountId, allReceive])
 
-  return { emails, loading, firstLoad, hasMore, loadMore, refresh, pollLatest, setEmails, unreadCount }
+  return { emails, loading, firstLoad, hasMore, loadMore, refresh, pollLatest, setEmails, unreadCount, total }
 }
