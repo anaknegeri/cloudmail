@@ -22,7 +22,8 @@ export async function initApp(): Promise<{ isLoggedIn: boolean }> {
 
       const settingStore = useSettingStore.getState()
       settingStore.setSettings(setting)
-      settingStore.setDomainList(setting?.domainList ?? [])
+      const domains = Array.isArray(setting?.domainList) ? setting.domainList : []
+      settingStore.setDomainList(domains)
       if (setting?.title) document.title = setting.title
 
       if (user) {
@@ -38,7 +39,8 @@ export async function initApp(): Promise<{ isLoggedIn: boolean }> {
       const setting: any = await websiteConfig()
       const settingStore = useSettingStore.getState()
       settingStore.setSettings(setting)
-      settingStore.setDomainList(setting?.domainList ?? [])
+      const domains = Array.isArray(setting?.domainList) ? setting.domainList : []
+      settingStore.setDomainList(domains)
       if (setting?.title) document.title = setting.title
       return { isLoggedIn: false }
     }
