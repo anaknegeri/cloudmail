@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import type { Theme } from '../types'
 import { useUserStore } from '../store/user'
-import { updateName, updatePassword, deleteAccount } from '../request/my'
+import { accountSetName } from '../request/account'
+import { resetPassword, userDelete } from '../request/my'
 import Avatar from '../components/Avatar'
 import Icon from '../components/Icon'
 
@@ -95,9 +96,10 @@ export default function Settings({ theme, onThemeChange }: SettingsProps) {
   async function handleSaveName() {
     if (!nameInput.trim()) { toast('Name cannot be empty'); return }
     if (nameInput === user?.name) { setEditingName(false); return }
+    if (!user?.account?.accountId) { toast('No account selected'); return }
     setSavingName(true)
     try {
-      await updateName(nameInput.trim())
+      await accountSetName(user.account.accountId, nameInput.trim())
       setUser({ ...user, name: nameInput.trim() } as any)
       toast('Name updated', 'success')
       setEditingName(false)
@@ -110,7 +112,7 @@ export default function Settings({ theme, onThemeChange }: SettingsProps) {
     if (pwdForm.password !== pwdForm.newPwd) { toast('Passwords do not match'); return }
     setSavingPwd(true)
     try {
-      await updatePassword(pwdForm.password, pwdForm.newPwd)
+      await resetPassword(pwdForm.password)
       toast('Password updated', 'success')
       setPwdOpen(false)
       setPwdForm({ password: '', newPwd: '' })
@@ -121,7 +123,7 @@ export default function Settings({ theme, onThemeChange }: SettingsProps) {
   async function handleDeleteAccount() {
     if (!confirm('This will permanently delete your account. Are you sure?')) return
     try {
-      await deleteAccount()
+      await userDelete()
       clearUser()
       localStorage.removeItem('token')
       window.location.replace('/login')

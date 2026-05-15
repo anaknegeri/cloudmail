@@ -6,6 +6,12 @@ export interface UserInfo {
   name?: string
   role?: string
   permKeys?: string[]
+  account?: {
+    accountId: number
+    email?: string
+    name?: string
+    allReceive?: number
+  }
   [key: string]: unknown
 }
 

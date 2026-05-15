@@ -5,9 +5,9 @@ export function starList(emailId?: number, size?: number) {
 }
 
 export function starAdd(emailId: number) {
-  return http.post('/star', { emailId })
+  return http.post('/star/add', { emailId })
 }
 
 export function starCancel(emailId: number) {
-  return http.delete('/star/' + emailId)
+  return http.delete('/star/cancel', { params: { emailId } })
 }

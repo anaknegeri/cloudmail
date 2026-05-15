@@ -36,7 +36,3 @@ export function emailSend(form: FormData | object, onProgress?: (e: ProgressEven
     noMsg: true,
   } as any)
 }
-
-export function emailDetail(emailId: number) {
-  return http.get('/email/' + emailId)
-}

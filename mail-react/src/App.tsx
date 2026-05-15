@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { initApp } from './lib/init'
 import { useSettingStore } from './store/setting'
 import { useAccountStore } from './store/account'
-import { getAccounts } from './request/my'
+import { accountList } from './request/account'
 import type { ApiEmail } from './types/api'
 
 // Screens
@@ -83,7 +83,7 @@ function AppShell({ onLogout, loggedIn }: { onLogout: () => void; loggedIn: bool
   const [accounts, setAccounts] = useState<{ accountId: number; email: string; allReceive: number }[]>([])
 
   useEffect(() => {
-    getAccounts().then(res => {
+    accountList().then(res => {
       const list = (res as unknown as { accountId: number; email: string; allReceive: number }[])
       setAccounts(list)
       if (list.length > 0 && !currentAccountId) {
